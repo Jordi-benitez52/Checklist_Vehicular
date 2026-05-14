@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Vehículos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f8; }
+        h1 { margin-bottom: 20px; }
+        .topbar, .filters { margin-bottom: 20px; }
+        .btn {
+            display: inline-block; padding: 10px 14px; text-decoration: none;
+            background: #2563eb; color: white; border-radius: 6px; border: none;
+        }
+        .btn-gray { background: #6b7280; }
+        .btn-red { background: #dc2626; }
+        table {
+            width: 100%; border-collapse: collapse; background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #111827; color: white; }
+        .filters input, .filters select {
+            padding: 8px; margin-right: 8px; margin-bottom: 8px;
+        }
+        .msg { padding: 10px; background: #dbeafe; margin-bottom: 15px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <h1>Gestión de vehículos</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="msg">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="topbar">
+        <a href="{% url 'web-vehiculo-nuevo' %}" class="btn">Agregar vehículo</a>
+    </div>
+
+    <form method="get" class="filters">
+        <input type="text" name="q" placeholder="Buscar por placa" value="{{ q }}">
+
+        <select name="tipo_entidad">
+            <option value="">Tipo entidad</option>
+            <option value="tracto" {% if tipo_entidad == 'tracto' %}selected{% endif %}>Tractocamión</option>
+            <option value="empleado" {% if tipo_entidad == 'empleado' %}selected{% endif %}>Vehículo de empleado</option>
+            <option value="visitante" {% if tipo_entidad == 'visitante' %}selected{% endif %}>Visitante/proveedor</option>
+        </select>
+
+        <select name="categoria">
+            <option value="">Categoría</option>
+            <option value="tractocamion" {% if categoria == 'tractocamion' %}selected{% endif %}>Tractocamión</option>
+            <option value="camioneta" {% if categoria == 'camioneta' %}selected{% endif %}>Camioneta</option>
+            <option value="automovil" {% if categoria == 'automovil' %}selected{% endif %}>Automóvil</option>
+            <option value="moto" {% if categoria == 'moto' %}selected{% endif %}>Moto</option>
+            <option value="otro" {% if categoria == 'otro' %}selected{% endif %}>Otro</option>
+        </select>
+
+        <select name="activo">
+            <option value="">Estado</option>
+            <option value="true" {% if activo == 'true' %}selected{% endif %}>Activo</option>
+            <option value="false" {% if activo == 'false' %}selected{% endif %}>Inactivo</option>
+        </select>
+
+        <button type="submit" class="btn btn-gray">Filtrar</button>
+        <a href="{% url 'web-vehiculos' %}" class="btn btn-gray">Limpiar</a>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Placa</th>
+                <th>Tipo entidad</th>
+                <th>Categoría</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Empresa</th>
+                <th>Activo</th>
+                <th>Checklist</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vehiculo in vehiculos %}
+            <tr>
+                <td>{{ vehiculo.placa }}</td>
+                <td>{{ vehiculo.get_tipo_entidad_display }}</td>
+                <td>{{ vehiculo.get_categoria_display }}</td>
+                <td>{{ vehiculo.marca }}</td>
+                <td>{{ vehiculo.modelo }}</td>
+                <td>{{ vehiculo.empresa }}</td>
+                <td>{% if vehiculo.activo %}Sí{% else %}No{% endif %}</td>
+                <td>{% if vehiculo.requiere_checklist %}Sí{% else %}No{% endif %}</td>
+                <td>
+                    <a href="{% url 'web-vehiculo-editar' vehiculo.id %}" class="btn btn-gray">Editar</a>
+                    {% if vehiculo.activo %}
+                        <a href="{% url 'web-vehiculo-desactivar' vehiculo.id %}" class="btn btn-red">Desactivar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9">No hay vehículos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,414 @@
+-- ============================================
+-- PÁGINA WEB: Gestión de Asignaciones
+-- Admin Dashboard para asignar conductores/empleados a vehículos
+-- ============================================
+
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Asignaciones - Checklist Vehicular{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="bi bi-link"></i> Gestión de Asignaciones</h2>
+            <p class="text-muted">Asigne conductores a tractocamiones y empleados a vehículos de empresa</p>
+        </div>
+    </div>
+
+    <!-- Navegación de pestañas -->
+    <ul class="nav nav-tabs mb-4" id="asignacionesTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="conductor-tab" data-bs-toggle="tab" data-bs-target="#conductor" type="button">
+                <i class="bi bi-truck"></i> Conductor → Tractocamión
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="empleado-tab" data-bs-toggle="tab" data-bs-target="#empleado" type="button">
+                <i class="bi bi-car-front"></i> Empleado → Vehículo Empresa
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button">
+                <i class="bi bi-clock-history"></i> Historial de Uso
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="bitacora-tab" data-bs-toggle="tab" data-bs-target="#bitacora" type="button">
+                <i class="bi bi-journal-text"></i> Bitácora
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="asignacionesTabContent">
+        <!-- ============================
+             PESTAÑA: CONDUCTOR → TRACTOCAMIÓN
+             ============================ -->
+        <div class="tab-pane fade show active" id="conductor" role="tabpanel">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Nueva Asignación</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="asignacionConductorForm">
+                                <div class="mb-3">
+                                    <label for="conductorSelect" class="form-label">Conductor</label>
+                                    <select class="form-select" id="conductorSelect" required>
+                                        <option value="">Seleccione un conductor</option>
+                                        {% for conductor in conductores %}
+                                        <option value="{{ conductor.id }}">{{ conductor.nombre_completo }} - {{ conductor.licencia }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="vehiculoSelect" class="form-label">Tractocamión</label>
+                                    <select class="form-select" id="vehiculoSelect" required>
+                                        <option value="">Seleccione un tractocamión</option>
+                                        {% for vehiculo in tractos %}
+                                        <option value="{{ vehiculo.id }}">{{ vehiculo.placa }} - {{ vehiculo.marca }} {{ vehiculo.modelo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="observacionesConductor" class="form-label">Observaciones</label>
+                                    <textarea class="form-control" id="observacionesConductor" rows="2"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-link"></i> Asignar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-people"></i> Asignaciones Activas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Conductor</th>
+                                            <th>Tractocamión</th>
+                                            <th>Fecha Asignación</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="asignacionesConductorBody">
+                                        {% for asig in asignaciones_conductor %}
+                                        <tr id="asig-conductor-{{ asig.id }}">
+                                            <td>{{ asig.conductor.nombre_completo }}</td>
+                                            <td>{{ asig.vehiculo.placa }} - {{ asig.vehiculo.marca }}</td>
+                                            <td>{{ asig.fecha_asignacion|date:"d/m/Y H:i" }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger desasignar-btn"
+                                                        data-id="{{ asig.id }}"
+                                                        data-tipo="conductor">
+                                                    <i class="bi bi-unlink"></i> Desasignar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">No hay asignaciones activas</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================
+             PESTAÑA: EMPLEADO → VEHÍCULO EMPRESA
+             ============================ -->
+        <div class="tab-pane fade" id="empleado" role="tabpanel">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Nueva Asignación</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="asignacionEmpleadoForm">
+                                <div class="mb-3">
+                                    <label for="empleadoSelect" class="form-label">Empleado</label>
+                                    <select class="form-select" id="empleadoSelect" required>
+                                        <option value="">Seleccione un empleado</option>
+                                        {% for empleado in empleados %}
+                                        <option value="{{ empleado.id }}">{{ empleado.numero_empleado }} - {{ empleado.nombre_completo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="vehiculoEmpleadoSelect" class="form-label">Vehículo de Empresa</label>
+                                    <select class="form-select" id="vehiculoEmpleadoSelect" required>
+                                        <option value="">Seleccione un vehículo</option>
+                                        {% for vehiculo in vehiculos_empleado %}
+                                        <option value="{{ vehiculo.id }}">{{ vehiculo.placa }} - {{ vehiculo.marca }} {{ vehiculo.modelo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="observacionesEmpleado" class="form-label">Observaciones</label>
+                                    <textarea class="form-control" id="observacionesEmpleado" rows="2"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-link"></i> Asignar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="bi bi-people"></i> Asignaciones Activas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Empleado</th>
+                                            <th>Vehículo</th>
+                                            <th>Fecha Asignación</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="asignacionesEmpleadoBody">
+                                        {% for asig in asignaciones_empleado %}
+                                        <tr id="asig-empleado-{{ asig.id }}">
+                                            <td>{{ asig.empleado.nombre_completo }}</td>
+                                            <td>{{ asig.vehiculo.placa }} - {{ asig.vehiculo.marca }}</td>
+                                            <td>{{ asig.fecha_asignacion|date:"d/m/Y H:i" }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-danger desasignar-empleado-btn"
+                                                        data-id="{{ asig.id }}">
+                                                    <i class="bi bi-unlink"></i> Desasignar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">No hay asignaciones activas</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================
+             PESTAÑA: HISTORIAL DE USO
+             ============================ -->
+        <div class="tab-pane fade" id="historial" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Vehículos Actualmente en Instalación</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Vehículo</th>
+                                    <th>Tipo</th>
+                                    <th>Conductor/Empleado</th>
+                                    <th>Hora Entrada</th>
+                                    <th>Turno</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for h in vehiculos_dentro %}
+                                <tr class="table-success">
+                                    <td>{{ h.vehiculo_placa }} - {{ h.vehiculo_marca }}</td>
+                                    <td><span class="badge bg-warning">{{ h.tipo_entidad }}</span></td>
+                                    <td>{{ h.conductor_nombre|default:h.empleado_nombre|default:"N/A" }}</td>
+                                    <td>{{ h.fecha_entrada|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ h.turno.tipo_turno }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No hay vehículos dentro de la instalación</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================
+             PESTAÑA: BITÁCORA
+             ============================ -->
+        <div class="tab-pane fade" id="bitacora" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-journal-text"></i> Bitácora de Cambios</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha/Hora</th>
+                                    <th>Acción</th>
+                                    <th>Tabla</th>
+                                    <th>Registro ID</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in bitacora %}
+                                <tr>
+                                    <td>{{ b.fecha_hora|date:"d/m/Y H:i:s" }}</td>
+                                    <td><span class="badge bg-{% if b.accion == 'ASIGNAR' %}success{% elif b.accion == 'DESASIGNAR' %}danger{% else %}secondary{% endif %}">{{ b.get_accion_display }}</span></td>
+                                    <td>{{ b.tabla_affectada }}</td>
+                                    <td>{{ b.registro_id }}</td>
+                                    <td>{{ b.usuario.username }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No hay registros en la bitácora</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Asignar Conductor
+    document.getElementById('asignacionConductorForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const conductorId = document.getElementById('conductorSelect').value;
+        const vehiculoId = document.getElementById('vehiculoSelect').value;
+        const observaciones = document.getElementById('observacionesConductor').value;
+
+        if (!conductorId || !vehiculoId) {
+            alert('Complete todos los campos requeridos');
+            return;
+        }
+
+        fetch('/api/platform/asignaciones/conductor-vehiculo/crear/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                conductor_id: conductorId,
+                vehiculo_id: vehiculoId,
+                observaciones: observaciones
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.id) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'No se pudo crear la asignación'));
+            }
+        })
+        .catch(err => alert('Error: ' + err));
+    });
+
+    // Desasignar Conductor
+    document.querySelectorAll('.desasignar-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!confirm('¿Está seguro de desasignar este conductor?')) return;
+            const id = this.dataset.id;
+
+            fetch('/api/platform/asignaciones/conductor-vehiculo/desasignar/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ asignacion_id: id })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.mensaje) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'No se pudo desasignar'));
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+        });
+    });
+
+    // Asignar Empleado
+    document.getElementById('asignacionEmpleadoForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const empleadoId = document.getElementById('empleadoSelect').value;
+        const vehiculoId = document.getElementById('vehiculoEmpleadoSelect').value;
+        const observaciones = document.getElementById('observacionesEmpleado').value;
+
+        if (!empleadoId || !vehiculoId) {
+            alert('Complete todos los campos requeridos');
+            return;
+        }
+
+        fetch('/api/platform/asignaciones/empleado-vehiculo/crear/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                empleado_id: empleadoId,
+                vehiculo_id: vehiculoId,
+                observaciones: observaciones
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.id) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'No se pudo crear la asignación'));
+            }
+        })
+        .catch(err => alert('Error: ' + err));
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,135 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>
+      <ion-icon name="shield-checkmark" class="ion-margin-end"></ion-icon>
+      Checklist Vehicular
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()" title="Cerrar sesión">
+        <ion-icon name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (user) {
+    <div class="user-greeting">
+      <ion-icon name="person-circle" class="ion-margin-end"></ion-icon>
+      <span>Bienvenido, <strong>{{ user.full_name || user.username }}</strong></span>
+    </div>
+  }
+
+  @if (turnoActivo) {
+    <ion-card color="success" class="ion-margin-bottom turno-card">
+      <ion-card-header>
+        <ion-card-subtitle>
+          <ion-icon name="time-outline" class="ion-margin-end"></ion-icon>
+          Turno {{ turnoActivo.tipo_turno | titlecase }}
+        </ion-card-subtitle>
+        <ion-card-title>
+          <ion-icon name="checkmark-circle" class="ion-margin-end"></ion-icon>
+          Turno Activo
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="4"><strong>Fecha:</strong></ion-col>
+            <ion-col size="8">{{ turnoActivo.fecha }}</ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="4"><strong>Inicio:</strong></ion-col>
+            <ion-col size="8">{{ turnoActivo.hora_apertura | date:'shortTime' }}</ion-col>
+          </ion-row>
+          @if (tiempoTranscurrido) {
+            <ion-row>
+              <ion-col size="4"><strong>Duración:</strong></ion-col>
+              <ion-col size="8">{{ tiempoTranscurrido }}</ion-col>
+            </ion-row>
+          }
+        </ion-grid>
+
+        <div class="stats-resumen">
+          <div class="stat-item entrada">
+            <ion-icon name="arrow-down-circle"></ion-icon>
+            <span class="stat-num">{{ stats.entradas }}</span>
+            <span class="stat-label">Entradas</span>
+          </div>
+          <div class="stat-item salida">
+            <ion-icon name="arrow-up-circle"></ion-icon>
+            <span class="stat-num">{{ stats.salidas }}</span>
+            <span class="stat-label">Salidas</span>
+          </div>
+          <div class="stat-item checklist">
+            <ion-icon name="clipboard"></ion-icon>
+            <span class="stat-num">{{ stats.checklists }}</span>
+            <span class="stat-label">Checklists</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-grid class="ion-text-center acceso-grid">
+      <ion-row>
+        <ion-col size="6">
+          <ion-card class="acceso-card entrada" (click)="irRegistro('entrada')">
+            <ion-card-content>
+              <ion-icon name="arrow-down-circle" class="acceso-icon"></ion-icon>
+              <ion-card-title>ENTRADA</ion-card-title>
+              <p>Registrar entrada</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+        <ion-col size="6">
+          <ion-card class="acceso-card salida" (click)="irRegistro('salida')">
+            <ion-card-content>
+              <ion-icon name="arrow-up-circle" class="acceso-icon"></ion-icon>
+              <ion-card-title>SALIDA</ion-card-title>
+              <p>Registrar salida</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+  } @else {
+    <ion-card color="warning" class="ion-margin-bottom">
+      <ion-card-content class="ion-text-center">
+        <ion-icon name="alert-circle" class="empty-icon"></ion-icon>
+        <h3>Sin turno abierto</h3>
+        <p>Abre un turno para comenzar a registrar accesos.</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-button expand="block" color="success" class="abrir-turno-btn" (click)="abrirTurno()">
+      <ion-icon name="play-circle" slot="start"></ion-icon>
+      Abrir Turno
+    </ion-button>
+  }
+
+  <ion-list lines="none" class="menu-list ion-margin-top">
+    <ion-item button (click)="irChecklistTracto()" [disabled]="!turnoActivo" class="menu-item">
+      <ion-icon name="clipboard" slot="start" color="primary"></ion-icon>
+      <ion-label>Nuevo Checklist Tracto</ion-label>
+      <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
+    </ion-item>
+    <ion-item button (click)="irHistorial()" class="menu-item">
+      <ion-icon name="time" slot="start" color="primary"></ion-icon>
+      <ion-label>Ver Historial</ion-label>
+      <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
+    </ion-item>
+    <ion-item button (click)="irPerfil()" class="menu-item">
+      <ion-icon name="person" slot="start" color="primary"></ion-icon>
+      <ion-label>Mi Perfil</ion-label>
+      <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
+    </ion-item>
+    @if (turnoActivo) {
+      <ion-button expand="block" color="danger" (click)="cerrarTurno()" class="ion-margin-top">
+        <ion-icon name="close-circle" slot="start"></ion-icon>
+        Cerrar Turno
+      </ion-button>
+    }
+  </ion-list>
+</ion-content>

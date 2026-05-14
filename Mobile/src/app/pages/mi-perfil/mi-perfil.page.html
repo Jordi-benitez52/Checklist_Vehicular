@@ -1,0 +1,149 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/dashboard-guardia'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <ion-icon name="person-circle" class="ion-margin-end"></ion-icon>
+      Mi Perfil
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (isLoading) {
+    <div class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando perfil...</p>
+    </div>
+  }
+
+  @if (!isLoading && user) {
+    <div class="profile-header">
+      <div class="avatar-container" (click)="triggerFileInput()">
+        @if (user.foto) {
+          <img [src]="user.foto" alt="Foto de perfil" class="avatar-image">
+        } @else {
+          <div class="avatar-placeholder">
+            <ion-icon name="person"></ion-icon>
+          </div>
+        }
+        <div class="avatar-overlay">
+          <ion-icon name="camera"></ion-icon>
+        </div>
+      </div>
+      <input type="file" #fileInput accept="image/*" (change)="onPhotoSelected($event)" style="display: none;">
+      <h2 class="profile-name">{{ user.nombre_completo || user.username }}</h2>
+      <p class="profile-role">{{ user.role | titlecase }}</p>
+      @if (user.last_profile_update) {
+        <ion-badge [color]="canUpdateProfile() ? 'success' : 'medium'" class="rate-limit-badge">
+          @if (canUpdateProfile()) {
+            <ion-icon name="checkmark-circle"></ion-icon>
+            Disponible para editar
+          } @else {
+            <ion-icon name="time-outline"></ion-icon>
+            {{ getTimeUntilUpdate() }}
+          }
+        </ion-badge>
+      }
+    </div>
+
+    <ion-card class="profile-form-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="create"></ion-icon>
+          Editar Información
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        @if (!canUpdateProfile() && user.last_profile_update) {
+          <div class="rate-limit-warning">
+            <ion-icon name="time-outline"></ion-icon>
+            Puedes actualizar tu perfil cada 15 minutos.
+            @if (user.last_profile_update) {
+              <span class="rate-limit-time">Próxima edición: {{ getTimeUntilUpdate() }}</span>
+            }
+          </div>
+        }
+
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Nombre de usuario</ion-label>
+          <ion-input [(ngModel)]="formData.username" [disabled]="true" placeholder="Nombre de usuario"></ion-input>
+        </ion-item>
+
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Nombre completo</ion-label>
+          <ion-input [(ngModel)]="formData.nombre_completo" placeholder="Ingresa tu nombre"></ion-input>
+        </ion-item>
+
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Correo electrónico</ion-label>
+          <ion-input [(ngModel)]="formData.email" type="email" placeholder="correo@ejemplo.com"></ion-input>
+        </ion-item>
+
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Número de empleado</ion-label>
+          <ion-input [(ngModel)]="formData.numero_empleado" [disabled]="true" placeholder="Número asignado"></ion-input>
+        </ion-item>
+
+        <ion-button
+          expand="block"
+          [color]="canUpdateProfile() ? 'primary' : 'medium'"
+          [disabled]="!canUpdateProfile() || isSaving"
+          (click)="guardarPerfil()">
+          @if (isSaving) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+            Guardando...
+          } @else {
+            <ion-icon slot="start" name="save"></ion-icon>
+            Guardar Cambios
+          }
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="password-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="lock-closed"></ion-icon>
+          Cambiar Contraseña
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Contraseña actual</ion-label>
+          <ion-input [(ngModel)]="passwordData.actual" type="password" placeholder="Ingresa tu contraseña actual"></ion-input>
+        </ion-item>
+
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Nueva contraseña</ion-label>
+          <ion-input [(ngModel)]="passwordData.nueva" type="password" placeholder="Mínimo 8 caracteres"></ion-input>
+        </ion-item>
+
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Confirmar nueva contraseña</ion-label>
+          <ion-input [(ngModel)]="passwordData.confirmar" type="password" placeholder="Repite la nueva contraseña"></ion-input>
+        </ion-item>
+
+        <ion-button
+          expand="block"
+          color="tertiary"
+          [disabled]="!canChangePassword() || isChangingPassword"
+          (click)="cambiarPassword()">
+          @if (isChangingPassword) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+            Cambiando...
+          } @else {
+            <ion-icon slot="start" name="key"></ion-icon>
+            Cambiar Contraseña
+          }
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-button expand="block" color="danger" fill="outline" (click)="confirmarCerrarSesion()">
+      <ion-icon slot="start" name="log-out"></ion-icon>
+      Cerrar Sesión
+    </ion-button>
+  }
+</ion-content>

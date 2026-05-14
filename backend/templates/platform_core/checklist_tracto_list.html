@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Checklists de tracto</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f8; }
+        .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .btn { padding:10px 14px; border-radius:8px; text-decoration:none; background:#2563eb; color:white; }
+        .card { background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        table { width:100%; border-collapse:collapse; background:white; }
+        th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; vertical-align:top; }
+        th { background:#111827; color:white; }
+    </style>
+</head>
+<body>
+    <div class="top">
+        <h1>Checklists de tractocamión</h1>
+        <div>
+            <a href="{% url 'web-reportes' %}" class="btn">Volver</a>
+            <a href="{% url 'web-checklist-tracto-nuevo' %}" class="btn">Nuevo checklist</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <form method="get">
+            <input type="text" name="q" placeholder="Buscar placa, conductor o guardia" value="{{ q }}">
+
+            <select name="estatus_general">
+                <option value="">Estatus</option>
+                <option value="aprobado" {% if estatus_general == 'aprobado' %}selected{% endif %}>Aprobado</option>
+                <option value="rechazado" {% if estatus_general == 'rechazado' %}selected{% endif %}>Rechazado</option>
+                <option value="condicionado" {% if estatus_general == 'condicionado' %}selected{% endif %}>Condicionado</option>
+            </select>
+
+            <select name="turno">
+                <option value="">Turno</option>
+                {% for t in turnos %}
+                <option value="{{ t.id }}" {% if turno == t.id|stringformat:"s" %}selected{% endif %}>
+                    {{ t.guardia.username }} - {{ t.fecha }} - {{ t.get_tipo_turno_display }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Filtrar</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha/hora</th>
+                <th>Placa</th>
+                <th>Conductor</th>
+                <th>Guardia</th>
+                <th>Estatus</th>
+                <th>Turno</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in checklists %}
+            <tr>
+                <td>{{ c.fecha_hora }}</td>
+                <td>{{ c.vehiculo.placa }}</td>
+                <td>{{ c.conductor.nombre_completo|default:"-" }}</td>
+                <td>{{ c.guardia.username }}</td>
+                <td>{{ c.get_estatus_general_display }}</td>
+                <td>{{ c.turno.fecha }} / {{ c.turno.get_tipo_turno_display }}</td>
+                <td>
+                    <a href="{% url 'web-checklist-tracto-detalle' c.id %}">Ver detalle</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No hay checklists registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

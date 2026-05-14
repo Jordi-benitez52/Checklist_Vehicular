@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Evidencias</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin:30px; background:#f4f6f8; }
+        .card { background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        .btn { padding:10px 14px; border-radius:8px; text-decoration:none; background:#2563eb; color:white; display:inline-block; margin-bottom:16px; }
+        img { width:180px; height:140px; object-fit:cover; border-radius:8px; margin:8px; }
+        .grid { display:flex; flex-wrap:wrap; gap:10px; }
+    </style>
+</head>
+<body>
+    <a href="{% url 'web-admin-dashboard' %}" class="btn">Volver</a>
+
+    <div class="card">
+        <h2>Evidencias en registros de acceso</h2>
+        <div class="grid">
+            {% for r in registros %}
+                <div>
+                    <img src="{{ r.evidencia_fotografica.url }}" alt="evidencia">
+                    <div>{{ r.fecha_hora }}</div>
+                    <div>{{ r.get_tipo_entidad_display }}</div>
+                </div>
+            {% empty %}
+                <p>Sin evidencias en registros.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Evidencias en checklist de tracto</h2>
+        <div class="grid">
+            {% for c in checklists %}
+                {% for e in c.evidencias.all %}
+                    <div>
+                        <img src="{{ e.imagen.url }}" alt="evidencia checklist">
+                        <div>{{ c.vehiculo.placa }}</div>
+                        <div>{{ c.fecha_hora }}</div>
+                    </div>
+                {% endfor %}
+            {% empty %}
+                <p>Sin evidencias en checklist.</p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

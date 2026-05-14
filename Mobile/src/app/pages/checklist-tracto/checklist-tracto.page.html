@@ -1,0 +1,402 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/dashboard-guardia'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <ion-icon name="clipboard" class="ion-margin-end"></ion-icon>
+      Checklist Tracto
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (!turnoActual) {
+    <ion-card color="warning" class="empty-card">
+      <ion-card-content>
+        <ion-icon name="warning" class="empty-icon"></ion-icon>
+        <h3>Sin turno abierto</h3>
+        <p>Debes abrir un turno antes de capturar checklists.</p>
+        <ion-button expand="block" routerLink="/dashboard-guardia">
+          Ir al Dashboard
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  @if (turnoActual) {
+    <!-- Info del turno - Siempre visible -->
+    <ion-card class="turno-info-card">
+      <ion-card-content>
+        <ion-grid>
+          <ion-row class="ion-align-items-center">
+            <ion-col size="8">
+              <div class="turno-info">
+                <ion-badge [color]="turnoActual.abierto ? 'success' : 'medium'" class="ion-margin-bottom">
+                  {{ turnoActual.abierto ? 'TURNO ACTIVO' : 'TURNO CERRADO' }}
+                </ion-badge>
+                <h2 class="turno-tipo">{{ turnoActual.tipo_turno | titlecase }}</h2>
+                <p class="turno-fecha">
+                  <ion-icon name="calendar-outline"></ion-icon>
+                  {{ turnoActual.fecha }}
+                  <span class="ion-margin-start">
+                    <ion-icon name="time-outline"></ion-icon>
+                    {{ turnoActual.hora_apertura | date:'shortTime' }}
+                  </span>
+                </p>
+              </div>
+            </ion-col>
+            <ion-col size="4" class="ion-text-right">
+              <div class="checklist-count">
+                <ion-icon name="clipboard-check" class="count-icon"></ion-icon>
+                <span class="count-number">{{ statsChecklist }}</span>
+                <span class="count-label">Checklists<br>hoy</span>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Pendientes Banner -->
+    @if (registrosPendientes.length > 0) {
+      <ion-card class="pendientes-card" color="light">
+        <ion-card-content>
+          <ion-grid>
+            <ion-row class="ion-align-items-center">
+              <ion-col size="2" class="ion-text-center">
+                <ion-icon name="alert-circle" size="large" color="warning"></ion-icon>
+              </ion-col>
+              <ion-col size="7">
+                <strong>{{ registrosPendientes.length }} checklist(s) pendiente(s)</strong>
+              </ion-col>
+              <ion-col size="3" class="ion-text-right">
+                <ion-button fill="clear" size="small" routerLink="/quick-registro">
+                  Ver <ion-icon slot="end" name="arrow-forward"></ion-icon>
+                </ion-button>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <!-- Resumen de progreso general -->
+    <ion-card class="resumen-card" [class.completo]="isFormComplete()">
+      <ion-card-content>
+        <ion-grid>
+          <ion-row class="ion-align-items-center">
+            <ion-col size="3" class="ion-text-center">
+              <ion-icon name="checkmark-circle" [color]="isFormComplete() ? 'success' : 'medium'" size="large"></ion-icon>
+            </ion-col>
+            <ion-col size="9">
+              <div class="resumen-texto">
+                <strong>{{ getProgresoTexto() }}</strong>
+                <p class="resumen-sub">{{ getPendientesTexto() }}</p>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Formulario en Acordeón -->
+    <ion-accordion-group [value]="seccionActiva" (ionChange)="onSeccionChange($event)">
+
+      <!-- 1. Datos del Registro -->
+      <ion-accordion value="datos">
+        <ion-item slot="header" class="accordion-header">
+          <ion-icon name="document-text" slot="start" class="accordion-icon"></ion-icon>
+          <ion-label>
+            <strong>Datos del Registro</strong>
+            <p class="accordion-sub">{{ getDatosCompletadas() }} de 2 campos</p>
+          </ion-label>
+          @if (isDatosCompleto()) {
+            <ion-badge slot="end" color="success">Completo</ion-badge>
+          }
+        </ion-item>
+        <div slot="content" class="accordion-content">
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Seleccionar registro de acceso *</ion-label>
+            <ion-select [(ngModel)]="registroAccesoId" placeholder="Elige un registro pendiente" interface="popover" ok-text="Aceptar" cancel-text="Cancelar">
+              @for (r of registrosPendientes; track r.id) {
+                <ion-select-option [value]="r.id">
+                  {{ r.vehiculo_info?.clave_interna || r.vehiculo_info?.placa }} |
+                  {{ r.tipo_movimiento_display }} |
+                  {{ r.fecha_hora | date:'dd/MM HH:mm' }} |
+                  {{ r.conductor_info?.nombre_completo || 'Sin conductor' }}
+                </ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+
+          <ion-item class="ion-margin-bottom">
+            <ion-label position="stacked">Estatus general *</ion-label>
+            <ion-select [(ngModel)]="estatusGeneral" interface="popover" ok-text="Aceptar" cancel-text="Cancelar">
+              <ion-select-option value="aprobado">
+                <ion-icon name="checkmark-circle" color="success" class="ion-margin-end"></ion-icon>
+                Aprobado
+              </ion-select-option>
+              <ion-select-option value="rechazado">
+                <ion-icon name="close-circle" color="danger" class="ion-margin-end"></ion-icon>
+                Rechazado
+              </ion-select-option>
+              <ion-select-option value="condicionado">
+                <ion-icon name="warning" color="warning" class="ion-margin-end"></ion-icon>
+                Condicionado
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Observaciones generales</ion-label>
+            <ion-textarea [(ngModel)]="observacionesGenerales" placeholder="Observaciones o comentarios..." rows="3"></ion-textarea>
+          </ion-item>
+
+          <div class="evidencia-section">
+            <ion-label class="evidencia-label">
+              <ion-icon name="camera" class="ion-margin-end"></ion-icon>
+              Evidencia fotográfica
+            </ion-label>
+            <div class="file-input-wrapper">
+              <input type="file" multiple accept="image/*" capture="environment" (change)="onEvidenciasSelected($event)" id="evidenciaInput">
+              <label for="evidenciaInput" class="file-input-label">
+                <ion-icon name="cloud-upload"></ion-icon>
+                <span>Tomar / Subir fotos</span>
+              </label>
+            </div>
+            @if (evidencias.length > 0) {
+              <div class="evidencia-preview">
+                <span class="evidencia-count">{{ evidencias.length }} foto(s) seleccionada(s)</span>
+              </div>
+            }
+          </div>
+
+          <ion-button expand="block" class="accordion-next-btn" (click)="irASiguienteSeccion('datos')">
+            Siguiente: Checklist Items
+            <ion-icon slot="end" name="arrow-forward"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-accordion>
+
+      <!-- 2. Checklist Items -->
+      <ion-accordion value="checklist">
+        <ion-item slot="header" class="accordion-header">
+          <ion-icon name="list" slot="start" class="accordion-icon"></ion-icon>
+          <ion-label>
+            <strong>Inspección de Items</strong>
+            <p class="accordion-sub">{{ getItemsCompletados() }} de {{ catalogoItems.length }} items</p>
+          </ion-label>
+          @if (isItemsCompleto()) {
+            <ion-badge slot="end" color="success">Completo</ion-badge>
+          } @else {
+            <ion-badge slot="end" color="warning">Faltan {{ catalogoItems.length - getItemsCompletados() }}</ion-badge>
+          }
+        </ion-item>
+        <div slot="content" class="accordion-content">
+          @for (grupo of getSeccionesAgrupadas(); track grupo.seccion) {
+            <div class="grupo-seccion">
+              <div class="grupo-header" (click)="toggleGrupo(grupo.seccion)">
+                <ion-icon name="chevron-down" class="grupo-chevron" [class.abierto]="isGrupoAbierto(grupo.seccion)"></ion-icon>
+                <span class="grupo-nombre">{{ grupo.seccion | titlecase }}</span>
+                <ion-badge [color]="isGrupoCompleto(grupo.seccion) ? 'success' : 'medium'" class="grupo-badge">
+                  {{ getGrupoCompletadas(grupo.seccion) }}/{{ grupo.items.length }}
+                </ion-badge>
+              </div>
+
+              @if (isGrupoAbierto(grupo.seccion)) {
+                <div class="grupo-items">
+                  @for (item of grupo.items; track item.id) {
+                    <div class="item-row" [class.completado]="resultados[item.id]?.valor">
+                      <div class="item-header">
+                        <span class="item-nombre">{{ item.nombre }}</span>
+                        @if (resultados[item.id]?.valor) {
+                          <ion-badge [color]="getValorBadgeColor(resultados[item.id].valor)" class="item-badge">
+                            {{ getValorLabel(resultados[item.id].valor) }}
+                          </ion-badge>
+                        }
+                      </div>
+                      <ion-segment [(ngModel)]="resultados[item.id].valor" class="item-segment" (ionChange)="onItemChange()">
+                        <ion-segment-button value="ok">
+                          <ion-label>OK</ion-label>
+                        </ion-segment-button>
+                        <ion-segment-button value="mal">
+                          <ion-label>Falla</ion-label>
+                        </ion-segment-button>
+                        <ion-segment-button value="na">
+                          <ion-label>N/A</ion-label>
+                        </ion-segment-button>
+                      </ion-segment>
+                      <ion-item class="item-observacion">
+                        <ion-label position="stacked">Observación</ion-label>
+                        <ion-input [(ngModel)]="resultados[item.id].observacion" placeholder="Opcional..."></ion-input>
+                      </ion-item>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <ion-button expand="block" class="accordion-next-btn" (click)="irASiguienteSeccion('checklist')">
+            Siguiente: Llantas
+            <ion-icon slot="end" name="arrow-forward"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-accordion>
+
+      <!-- 3. Llantas -->
+      <ion-accordion value="llantas">
+        <ion-item slot="header" class="accordion-header">
+          <ion-icon name="ellipse" slot="start" class="accordion-icon"></ion-icon>
+          <ion-label>
+            <strong>Inspección de Llantas</strong>
+            <p class="accordion-sub">{{ countLlantasCompletadas() }} de {{ tiresPositions.length }} revisadas</p>
+          </ion-label>
+          @if (countLlantasCompletadas() === tiresPositions.length) {
+            <ion-badge slot="end" color="success">Completo</ion-badge>
+          } @else {
+            <ion-badge slot="end" color="warning">Faltan {{ tiresPositions.length - countLlantasCompletadas() }}</ion-badge>
+          }
+        </ion-item>
+        <div slot="content" class="accordion-content">
+          <div class="llantas-grid">
+            @for (ll of tiresPositions; track ll.key) {
+              <div class="llanta-card" [class.completed]="tires[ll.key]?.estado">
+                <div class="llanta-header">
+                  <span class="llanta-posicion">{{ ll.label }}</span>
+                  @if (tires[ll.key]?.estado) {
+                    <ion-badge [color]="getBadgeColor(tires[ll.key].estado)" class="llanta-badge">
+                      {{ getBadgeLabel(tires[ll.key].estado) }}
+                    </ion-badge>
+                  }
+                </div>
+                <ion-segment [(ngModel)]="tires[ll.key].estado" class="llanta-segment">
+                  <ion-segment-button value="ok">
+                    <ion-label>OK</ion-label>
+                  </ion-segment-button>
+                  <ion-segment-button value="regular">
+                    <ion-label>Reg</ion-label>
+                  </ion-segment-button>
+                  <ion-segment-button value="mal">
+                    <ion-label>Falla</ion-label>
+                  </ion-segment-button>
+                  <ion-segment-button value="na">
+                    <ion-label>N/A</ion-label>
+                  </ion-segment-button>
+                </ion-segment>
+                <ion-input
+                  [(ngModel)]="tires[ll.key].observacion"
+                  placeholder="Obs..."
+                  class="llanta-obs">
+                </ion-input>
+              </div>
+            }
+          </div>
+
+          <ion-button expand="block" class="accordion-next-btn" (click)="irASiguienteSeccion('llantas')">
+            Siguiente: Firmas
+            <ion-icon slot="end" name="arrow-forward"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-accordion>
+
+      <!-- 4. Firmas -->
+      <ion-accordion value="firmas">
+        <ion-item slot="header" class="accordion-header">
+          <ion-icon name="create" slot="start" class="accordion-icon"></ion-icon>
+          <ion-label>
+            <strong>Firmas</strong>
+            <p class="accordion-sub">{{ getFirmasCompletadas() }} de 2 firmas</p>
+          </ion-label>
+          @if (isFirmasCompleto()) {
+            <ion-badge slot="end" color="success">Completo</ion-badge>
+          } @else {
+            <ion-badge slot="end" color="warning">Faltan {{ 2 - getFirmasCompletadas() }}</ion-badge>
+          }
+        </ion-item>
+        <div slot="content" class="accordion-content">
+          <div class="firmas-container">
+            <div class="firma-box" [class.completada]="hasFirmaOperador()">
+              <div class="firma-header">
+                <span class="firma-label">Firma del Operador</span>
+                @if (hasFirmaOperador()) {
+                  <ion-badge color="success">Capturada</ion-badge>
+                }
+                <ion-button fill="clear" size="small" color="medium" (click)="clearFirma('operador')">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+              <canvas
+                #canvasOperador
+                class="firma-canvas"
+                (mousedown)="startDraw($event, 'operador')"
+                (mousemove)="draw($event, 'operador')"
+                (mouseup)="stopDraw('operador')"
+                (mouseleave)="stopDraw('operador')"
+                (touchstart)="startDraw($event, 'operador')"
+                (touchmove)="draw($event, 'operador'); $event.preventDefault()"
+                (touchend)="stopDraw('operador')">
+              </canvas>
+              <div class="firma-footer">Firma operador</div>
+            </div>
+
+            <div class="firma-box" [class.completada]="hasFirmaVigilante()">
+              <div class="firma-header">
+                <span class="firma-label">Firma del Vigilante</span>
+                @if (hasFirmaVigilante()) {
+                  <ion-badge color="success">Capturada</ion-badge>
+                }
+                <ion-button fill="clear" size="small" color="medium" (click)="clearFirma('vigilante')">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+              <canvas
+                #canvasVigilante
+                class="firma-canvas"
+                (mousedown)="startDraw($event, 'vigilante')"
+                (mousemove)="draw($event, 'vigilante')"
+                (mouseup)="stopDraw('vigilante')"
+                (mouseleave)="stopDraw('vigilante')"
+                (touchstart)="startDraw($event, 'vigilante')"
+                (touchmove)="draw($event, 'vigilante'); $event.preventDefault()"
+                (touchend)="stopDraw('vigilante')">
+              </canvas>
+              <div class="firma-footer">Firma vigilante</div>
+            </div>
+          </div>
+        </div>
+      </ion-accordion>
+
+    </ion-accordion-group>
+
+    <!-- Errores de validación -->
+    @if (getErroresValidacion().length > 0) {
+      <ion-card color="danger" class="errores-card">
+        <ion-card-content>
+          <div class="errores-header">
+            <ion-icon name="warning"></ion-icon>
+            <strong>Faltan los siguientes campos:</strong>
+          </div>
+          <ul class="errores-lista">
+            @for (error of getErroresValidacion(); track error) {
+              <li>{{ error }}</li>
+            }
+          </ul>
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <!-- Botón guardar -->
+    <ion-button
+      expand="block"
+      size="large"
+      [color]="estatusGeneral === 'rechazado' ? 'danger' : estatusGeneral === 'condicionado' ? 'warning' : 'success'"
+      class="guardar-btn"
+      [disabled]="!isFormComplete()"
+      (click)="guardarChecklist()">
+      <ion-icon [slot]="'start'" name="save"></ion-icon>
+      GUARDAR CHECKLIST
+    </ion-button>
+  }
+</ion-content>

@@ -1,0 +1,12 @@
+<td>
+    Req: {% if r.checklist_requerido %}Sí{% else %}No{% endif %}<br>
+    Realizado: {% if r.checklist_realizado %}Sí{% else %}No{% endif %}<br>
+
+    {% if r.tipo_entidad == 'tracto' and r.checklist_requerido and not r.checklist_realizado %}
+        <a href="{% url 'web-checklist-tracto-nuevo' %}">Crear checklist</a>
+    {% endif %}
+
+    {% if r.tipo_entidad == 'tracto' and r.checklist_realizado and r.checklist_tracto %}
+        <a href="{% url 'web-checklist-tracto-detalle' r.checklist_tracto.id %}">Ver checklist</a>
+    {% endif %}
+</td>

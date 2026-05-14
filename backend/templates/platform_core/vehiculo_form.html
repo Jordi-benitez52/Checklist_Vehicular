@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ titulo }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f8; }
+        h1 { margin-bottom: 20px; }
+        form {
+            background: white; padding: 20px; max-width: 800px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+        label { display: block; margin-top: 12px; font-weight: bold; }
+        input, select, textarea {
+            width: 100%; padding: 10px; margin-top: 6px;
+            border: 1px solid #ccc; border-radius: 6px;
+        }
+        .checks { margin-top: 12px; }
+        .btn {
+            display: inline-block; padding: 10px 14px; text-decoration: none;
+            background: #2563eb; color: white; border-radius: 6px; border: none; margin-top: 16px;
+        }
+        .btn-gray { background: #6b7280; }
+    </style>
+</head>
+<body>
+    <h1>{{ titulo }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Clave interna</label>
+        <input type="text" name="clave_interna" value="{{ vehiculo.clave_interna|default:'' }}">
+
+        <label>Placa</label>
+        <input type="text" name="placa" value="{{ vehiculo.placa|default:'' }}" required>
+
+        <label>Tipo entidad</label>
+        <select name="tipo_entidad" required>
+            <option value="">Seleccione</option>
+            <option value="tracto" {% if vehiculo.tipo_entidad == 'tracto' %}selected{% endif %}>Tractocamión</option>
+            <option value="empleado" {% if vehiculo.tipo_entidad == 'empleado' %}selected{% endif %}>Vehículo de empleado</option>
+            <option value="visitante" {% if vehiculo.tipo_entidad == 'visitante' %}selected{% endif %}>Vehículo de visitante/proveedor</option>
+        </select>
+
+        <label>Categoría</label>
+        <select name="categoria" required>
+            <option value="">Seleccione</option>
+            <option value="tractocamion" {% if vehiculo.categoria == 'tractocamion' %}selected{% endif %}>Tractocamión</option>
+            <option value="camioneta" {% if vehiculo.categoria == 'camioneta' %}selected{% endif %}>Camioneta</option>
+            <option value="automovil" {% if vehiculo.categoria == 'automovil' %}selected{% endif %}>Automóvil</option>
+            <option value="moto" {% if vehiculo.categoria == 'moto' %}selected{% endif %}>Moto</option>
+            <option value="otro" {% if vehiculo.categoria == 'otro' %}selected{% endif %}>Otro</option>
+        </select>
+
+        <label>Propietario</label>
+        <input type="text" name="propietario" value="{{ vehiculo.propietario|default:'' }}">
+
+        <label>Empresa</label>
+        <input type="text" name="empresa" value="{{ vehiculo.empresa|default:'' }}">
+
+        <label>Marca</label>
+        <input type="text" name="marca" value="{{ vehiculo.marca|default:'' }}">
+
+        <label>Modelo</label>
+        <input type="text" name="modelo" value="{{ vehiculo.modelo|default:'' }}">
+
+        <label>Color</label>
+        <input type="text" name="color" value="{{ vehiculo.color|default:'' }}">
+
+        <label>Número económico</label>
+        <input type="text" name="numero_economico" value="{{ vehiculo.numero_economico|default:'' }}">
+
+        <label>Observaciones</label>
+        <textarea name="observaciones">{{ vehiculo.observaciones|default:'' }}</textarea>
+
+        <div class="checks">
+            <label><input type="checkbox" name="activo" {% if vehiculo.activo or vehiculo == None %}checked{% endif %}> Activo</label>
+            <label><input type="checkbox" name="requiere_checklist" {% if vehiculo.requiere_checklist or vehiculo == None %}checked{% endif %}> Requiere checklist</label>
+        </div>
+
+        <button type="submit" class="btn">Guardar</button>
+        <a href="{% url 'web-vehiculos' %}" class="btn btn-gray">Volver</a>
+    </form>
+</body>
+</html>

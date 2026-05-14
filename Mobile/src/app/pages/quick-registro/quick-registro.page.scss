@@ -1,0 +1,496 @@
+// ================================================================
+// Quick Registro Page - Accordion Style
+// ================================================================
+
+.turno-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, #1d4ed8 100%);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  color: white;
+}
+
+.turno-info-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  ion-icon {
+    font-size: 1.2rem;
+  }
+
+  .turno-guardia {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .turno-separator {
+    opacity: 0.5;
+  }
+
+  .turno-numero {
+    font-size: 0.9rem;
+  }
+}
+
+.turno-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+
+  ion-icon {
+    font-size: 1rem;
+  }
+}
+
+// Registro Toggle
+.registro-toggle {
+  margin-bottom: 16px;
+
+  .tipo-segment {
+    --background: var(--ion-color-light);
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  ion-segment-button {
+    --indicator-color: var(--ion-color-primary);
+    --color: var(--ion-color-medium);
+    --color-checked: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+    min-height: 48px;
+    border-radius: 8px;
+    text-transform: uppercase;
+
+    ion-icon {
+      font-size: 1.2rem;
+      margin-right: 4px;
+    }
+  }
+}
+
+// Section Headers
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--ion-color-light);
+
+  ion-icon {
+    color: var(--ion-color-primary);
+  }
+}
+
+// Pendientes Section
+.pendientes-section {
+  margin-bottom: 20px;
+}
+
+.pendientes-accordion {
+  ion-accordion {
+    margin-bottom: 8px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.pendiente-header {
+  --background: var(--ion-color-light);
+  --padding-start: 16px;
+  --padding-end: 16px;
+  min-height: 60px;
+
+  ion-icon {
+    font-size: 1.4rem;
+  }
+
+  .ion-label {
+    strong {
+      font-size: 0.95rem;
+    }
+
+    p {
+      font-size: 0.8rem;
+      color: var(--ion-color-medium);
+    }
+  }
+
+  &.tracto-header {
+    border-left: 4px solid #FF9800;
+    ion-icon[name="truck"] {
+      color: #FF9800;
+    }
+  }
+
+  &.conductor-header {
+    border-left: 4px solid #FF5722;
+    ion-icon[name="person"] {
+      color: #FF5722;
+    }
+  }
+
+  &.empleado-header {
+    border-left: 4px solid #4CAF50;
+    ion-icon[name="business"] {
+      color: #4CAF50;
+    }
+  }
+
+  &.propio-header {
+    border-left: 4px solid #9C27B0;
+    ion-icon[name="car"] {
+      color: #9C27B0;
+    }
+  }
+
+  &.visitante-header {
+    border-left: 4px solid #00BCD4;
+    ion-icon[name="person-outline"] {
+      color: #00BCD4;
+    }
+  }
+}
+
+.pendiente-list {
+  background: var(--ion-color-light);
+  padding: 8px;
+
+  ion-item {
+    --background: white;
+    --border-radius: 8px;
+    margin-bottom: 6px;
+    --padding-start: 12px;
+    --padding-end: 12px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h3 {
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+
+    p {
+      font-size: 0.8rem;
+      color: var(--ion-color-medium);
+    }
+
+    .text-small {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.no-pendientes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  background: var(--ion-color-light);
+  border-radius: 12px;
+  text-align: center;
+
+  ion-icon {
+    font-size: 2.5rem;
+    color: var(--ion-color-success);
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--ion-color-medium);
+    font-size: 0.9rem;
+  }
+}
+
+// Formularios Section
+.formularios-section {
+  margin-bottom: 20px;
+}
+
+.formularios-accordion {
+  ion-accordion {
+    margin-bottom: 10px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.form-header {
+  --background: white;
+  --padding-start: 16px;
+  --padding-end: 12px;
+  min-height: 64px;
+  border-left: 4px solid transparent;
+
+  ion-icon:first-child {
+    font-size: 1.4rem;
+    margin-right: 12px;
+  }
+
+  .ion-label {
+    strong {
+      font-size: 0.95rem;
+    }
+
+    p {
+      font-size: 0.8rem;
+      color: var(--ion-color-medium);
+    }
+  }
+
+  .accordion-icon {
+    color: var(--ion-color-medium);
+    transition: transform 0.2s ease;
+  }
+
+  &.conductor-header {
+    border-left-color: #FF5722;
+    ion-icon[name="person"] {
+      color: #FF5722;
+    }
+  }
+
+  &.tracto-header {
+    border-left-color: #FF9800;
+    ion-icon[name="truck"] {
+      color: #FF9800;
+    }
+  }
+
+  &.empleado-header {
+    border-left-color: #4CAF50;
+    ion-icon[name="business"] {
+      color: #4CAF50;
+    }
+  }
+
+  &.propio-header {
+    border-left-color: #9C27B0;
+    ion-icon[name="car"] {
+      color: #9C27B0;
+    }
+  }
+
+  &.visitante-header {
+    border-left-color: #00BCD4;
+    ion-icon[name="person-outline"] {
+      color: #00BCD4;
+    }
+  }
+}
+
+.form-content {
+  background: var(--ion-color-light);
+  padding: 16px;
+}
+
+.form-section {
+  // Form sections inside accordion
+}
+
+.search-item {
+  position: relative;
+}
+
+.results-list {
+  background: white;
+  border-radius: 12px;
+  margin: -8px 0 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  .result-item {
+    --padding-start: 12px;
+    --inner-padding-end: 12px;
+    border-bottom: 1px solid var(--ion-color-light);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    h3 {
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+
+    p {
+      font-size: 0.8rem;
+      color: var(--ion-color-medium);
+    }
+  }
+}
+
+.selected-item {
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border-left: 3px solid var(--ion-color-primary);
+  background: white;
+
+  strong {
+    font-size: 0.95rem;
+  }
+
+  p {
+    font-size: 0.85rem;
+    color: var(--ion-color-medium);
+  }
+}
+
+.info-item {
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border-left: 3px solid var(--ion-color-primary);
+  background: white;
+
+  strong {
+    font-size: 0.95rem;
+  }
+
+  p {
+    font-size: 0.85rem;
+    color: var(--ion-color-medium);
+  }
+}
+
+// Evidencia
+.evidencia-section {
+  margin-top: 16px;
+}
+
+.evidencia-preview {
+  position: relative;
+  margin-top: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--ion-color-success);
+  background: white;
+
+  img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+  }
+
+  ion-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+// Registrar Section
+.registrar-section {
+  margin-top: 20px;
+  padding-bottom: 20px;
+}
+
+.registrar-btn {
+  --border-radius: 14px;
+  height: 56px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.help-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.85rem;
+
+  ion-icon {
+    font-size: 1rem;
+  }
+}
+
+// Accordion animation
+ion-accordion {
+  ion-item[slot="header"] {
+    transition: background 0.2s ease;
+  }
+
+  &.accordion-expanded {
+    ion-item[slot="header"] {
+      --background: var(--ion-color-primary-tint);
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 480px) {
+  .turno-info-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .turno-status {
+    align-self: flex-end;
+  }
+
+  .form-header {
+    .ion-label {
+      strong {
+        font-size: 0.85rem;
+      }
+
+      p {
+        font-size: 0.7rem;
+      }
+    }
+  }
+}
+
+// Badge colors
+ion-badge {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --padding-top: 4px;
+  --padding-bottom: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+// Text utilities
+.text-success {
+  color: var(--ion-color-success);
+}
+
+.text-warning {
+  color: var(--ion-color-warning);
+}
+
+.text-muted {
+  color: var(--ion-color-medium-tint);
+}
+
+.text-small {
+  font-size: 0.75rem;
+}
+
+// ion-text-small for Angular
+:host ::ng-deep {
+  .ion-text-small {
+    font-size: 0.8rem;
+    color: var(--ion-color-medium);
+  }
+}

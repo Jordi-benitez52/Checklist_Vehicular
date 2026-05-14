@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de turnos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f4f6f8;
+            color: #111827;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .topbar,
+        .filters,
+        .summary {
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 14px;
+            text-decoration: none;
+            background: #2563eb;
+            color: white;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+
+        .btn:hover {
+            opacity: 0.92;
+        }
+
+        .btn-gray {
+            background: #6b7280;
+        }
+
+        .btn-red {
+            background: #dc2626;
+        }
+
+        .btn-green {
+            background: #059669;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+
+        .filters select {
+            padding: 8px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+
+        .msg {
+            padding: 10px;
+            background: #dbeafe;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #93c5fd;
+        }
+
+        .summary span {
+            display: inline-block;
+            margin-right: 18px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #111827;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .estado-abierto {
+            color: #059669;
+            font-weight: bold;
+        }
+
+        .estado-cerrado {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .acciones a {
+            margin-bottom: 6px;
+        }
+
+        .acciones {
+            white-space: nowrap;
+        }
+
+        .empty-row {
+            text-align: center;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gestión de turnos</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="msg">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="topbar">
+        <a href="{% url 'web-turno-nuevo' %}" class="btn btn-green">Agregar turno</a>
+    </div>
+
+    <div class="card">
+        <form method="get" class="filters">
+            <select name="guardia">
+                <option value="">Guardia</option>
+                {% for usuario in guardias %}
+                    <option value="{{ usuario.id }}" {% if guardia == usuario.id|stringformat:"s" %}selected{% endif %}>
+                        {{ usuario.username }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select name="tipo_turno">
+                <option value="">Tipo turno</option>
+                <option value="matutino" {% if tipo_turno == 'matutino' %}selected{% endif %}>Matutino</option>
+                <option value="vespertino" {% if tipo_turno == 'vespertino' %}selected{% endif %}>Vespertino</option>
+                <option value="nocturno" {% if tipo_turno == 'nocturno' %}selected{% endif %}>Nocturno</option>
+            </select>
+
+            <select name="abierto">
+                <option value="">Estado</option>
+                <option value="true" {% if abierto == 'true' %}selected{% endif %}>Abierto</option>
+                <option value="false" {% if abierto == 'false' %}selected{% endif %}>Cerrado</option>
+            </select>
+
+            <button type="submit" class="btn btn-gray">Filtrar</button>
+            <a href="{% url 'web-turnos' %}" class="btn btn-gray">Limpiar</a>
+        </form>
+    </div>
+
+    <div class="card summary">
+        <span>Total: {{ turnos|length }}</span>
+        <span>Filtro guardia: {% if guardia %}Sí{% else %}No{% endif %}</span>
+        <span>Filtro tipo: {% if tipo_turno %}Sí{% else %}No{% endif %}</span>
+        <span>Filtro estado: {% if abierto %}Sí{% else %}No{% endif %}</span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Guardia</th>
+                <th>Tipo turno</th>
+                <th>Fecha</th>
+                <th>Hora apertura</th>
+                <th>Hora cierre</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for turno in turnos %}
+            <tr>
+                <td>{{ turno.guardia.username }}</td>
+                <td>{{ turno.get_tipo_turno_display }}</td>
+                <td>{{ turno.fecha }}</td>
+                <td>{{ turno.hora_apertura }}</td>
+                <td>{{ turno.hora_cierre|default:"-" }}</td>
+                <td>
+                    {% if turno.abierto %}
+                        <span class="estado-abierto">Abierto</span>
+                    {% else %}
+                        <span class="estado-cerrado">Cerrado</span>
+                    {% endif %}
+                </td>
+                <td class="acciones">
+                    <a href="{% url 'web-turno-editar' turno.id %}" class="btn btn-gray">Editar</a>
+
+                    {% if turno.abierto %}
+                        <a href="{% url 'web-turno-cerrar' turno.id %}" class="btn btn-red">Cerrar</a>
+                    {% endif %}
+
+                    <a href="{% url 'web-turno-reporte' turno.id %}" class="btn btn-green">Reporte</a>
+                    <a href="{% url 'web-turno-historial' turno.id %}" class="btn">Historial</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="empty-row">No hay turnos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

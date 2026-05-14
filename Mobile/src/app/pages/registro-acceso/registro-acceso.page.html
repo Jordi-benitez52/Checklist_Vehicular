@@ -1,0 +1,149 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Registro de acceso</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Datos generales</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Turno</ion-label>
+        <ion-select [(ngModel)]="turnoId">
+          <ion-select-option *ngFor="let turno of turnos" [value]="turno.id">
+            {{ turno.tipo_turno }} - {{ turno.fecha }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Tipo de movimiento</ion-label>
+        <ion-select [(ngModel)]="tipoMovimiento">
+          <ion-select-option value="entrada">Entrada</ion-select-option>
+          <ion-select-option value="salida">Salida</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Tipo de entidad</ion-label>
+        <ion-select [(ngModel)]="tipoEntidad" (ionChange)="onTipoEntidadChange()">
+          <ion-select-option value="empleado">Empleado con vehículo</ion-select-option>
+          <ion-select-option value="tracto">Tractocamión</ion-select-option>
+          <ion-select-option value="visitante">Visitante / Proveedor</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Observaciones</ion-label>
+        <ion-textarea [(ngModel)]="observaciones"></ion-textarea>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="tipoEntidad === 'empleado'">
+    <ion-card-header>
+      <ion-card-title>Empleado con vehículo</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Empleado</ion-label>
+        <ion-select [(ngModel)]="empleadoId">
+          <ion-select-option *ngFor="let empleado of empleados" [value]="empleado.id">
+            {{ empleado.numero_empleado }} - {{ empleado.nombre_completo }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Vehículo</ion-label>
+        <ion-select [(ngModel)]="vehiculoId">
+          <ion-select-option *ngFor="let vehiculo of vehiculos" [value]="vehiculo.id">
+            {{ vehiculo.placa }} - {{ vehiculo.marca }} {{ vehiculo.modelo }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="tipoEntidad === 'tracto'">
+    <ion-card-header>
+      <ion-card-title>Tractocamión</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Tracto</ion-label>
+        <ion-select [(ngModel)]="vehiculoId">
+          <ion-select-option *ngFor="let vehiculo of vehiculos" [value]="vehiculo.id">
+            {{ vehiculo.placa }} - {{ vehiculo.marca }} {{ vehiculo.modelo }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Conductor</ion-label>
+        <ion-select [(ngModel)]="conductorId">
+          <ion-select-option *ngFor="let conductor of conductores" [value]="conductor.id">
+            {{ conductor.nombre_completo }} - {{ conductor.empresa }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="tipoEntidad === 'visitante'">
+    <ion-card-header>
+      <ion-card-title>Visitante / Proveedor</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Tipo visitante</ion-label>
+        <ion-select [(ngModel)]="visitante.tipo_visitante">
+          <ion-select-option value="proveedor">Proveedor</ion-select-option>
+          <ion-select-option value="visitante">Visitante</ion-select-option>
+          <ion-select-option value="otro">Otro</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Nombre completo</ion-label>
+        <ion-input [(ngModel)]="visitante.nombre_completo"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Empresa</ion-label>
+        <ion-input [(ngModel)]="visitante.empresa"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Tipo general de vehículo</ion-label>
+        <ion-input [(ngModel)]="visitante.vehiculo_tipo_general"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Placas</ion-label>
+        <ion-input [(ngModel)]="visitante.placas"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Motivo</ion-label>
+        <ion-input [(ngModel)]="visitante.motivo"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Observaciones visitante</ion-label>
+        <ion-textarea [(ngModel)]="visitante.observaciones"></ion-textarea>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-button expand="block" class="ion-margin-top" (click)="registrar()">
+    Guardar registro de acceso
+  </ion-button>
+</ion-content>

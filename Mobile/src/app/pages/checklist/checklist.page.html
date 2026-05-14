@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Registrar checklist</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Checklist vehicular</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Placa</ion-label>
+        <ion-input [(ngModel)]="placa"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Nivel de combustible</ion-label>
+        <ion-input [(ngModel)]="nivel_combustible"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-checkbox slot="start" [(ngModel)]="luces"></ion-checkbox>
+        <ion-label>Luces en buen estado</ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-checkbox slot="start" [(ngModel)]="frenos"></ion-checkbox>
+        <ion-label>Frenos en buen estado</ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-checkbox slot="start" [(ngModel)]="llantas"></ion-checkbox>
+        <ion-label>Llantas en buen estado</ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-checkbox slot="start" [(ngModel)]="espejos"></ion-checkbox>
+        <ion-label>Espejos en buen estado</ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Observaciones</ion-label>
+        <ion-textarea [(ngModel)]="observaciones"></ion-textarea>
+      </ion-item>
+
+      <ion-button expand="block" class="ion-margin-top" (click)="registrarChecklist()">
+        Guardar checklist
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

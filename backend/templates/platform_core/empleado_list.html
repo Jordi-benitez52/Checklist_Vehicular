@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Empleados</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f8; }
+        h1 { margin-bottom: 20px; }
+        .topbar, .filters { margin-bottom: 20px; }
+        .btn {
+            display: inline-block; padding: 10px 14px; text-decoration: none;
+            background: #2563eb; color: white; border-radius: 6px; border: none;
+        }
+        .btn-gray { background: #6b7280; }
+        .btn-red { background: #dc2626; }
+        table {
+            width: 100%; border-collapse: collapse; background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #111827; color: white; }
+        .filters input, .filters select {
+            padding: 8px; margin-right: 8px; margin-bottom: 8px;
+        }
+        .msg { padding: 10px; background: #dbeafe; margin-bottom: 15px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <h1>Gestión de empleados</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="msg">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="topbar">
+        <a href="{% url 'web-empleado-nuevo' %}" class="btn">Agregar empleado</a>
+    </div>
+
+    <form method="get" class="filters">
+        <input type="text" name="q" placeholder="Buscar por nombre o número" value="{{ q }}">
+
+        <select name="sucursal">
+            <option value="">Sucursal / departamento</option>
+            <option value="CANCUN" {% if sucursal == 'CANCUN' %}selected{% endif %}>CANCUN</option>
+            <option value="PROGRESO" {% if sucursal == 'PROGRESO' %}selected{% endif %}>PROGRESO</option>
+            <option value="FLAMBOYANES" {% if sucursal == 'FLAMBOYANES' %}selected{% endif %}>FLAMBOYANES</option>
+        </select>
+
+        <select name="activo">
+            <option value="">Estado</option>
+            <option value="true" {% if activo == 'true' %}selected{% endif %}>Activo</option>
+            <option value="false" {% if activo == 'false' %}selected{% endif %}>Inactivo</option>
+        </select>
+
+        <button type="submit" class="btn btn-gray">Filtrar</button>
+        <a href="{% url 'web-empleados' %}" class="btn btn-gray">Limpiar</a>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Nombre completo</th>
+                <th>Sucursal / departamento</th>
+                <th>Puesto</th>
+                <th>Activo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for empleado in empleados %}
+            <tr>
+                <td>{{ empleado.numero_empleado }}</td>
+                <td>{{ empleado.nombre_completo }}</td>
+                <td>{{ empleado.departamento }}</td>
+                <td>{{ empleado.puesto }}</td>
+                <td>{% if empleado.activo %}Sí{% else %}No{% endif %}</td>
+                <td>
+                    <a href="{% url 'web-empleado-editar' empleado.id %}" class="btn btn-gray">Editar</a>
+                    {% if empleado.activo %}
+                        <a href="{% url 'web-empleado-desactivar' empleado.id %}" class="btn btn-red">Desactivar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No hay empleados registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

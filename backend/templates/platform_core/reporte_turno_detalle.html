@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte por Turno #{{ turno.id }} - Checklist Vehicular</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #059669;
+            --warning: #f59e0b;
+            --danger: #dc2626;
+            --sidebar-bg: #1e3a5f;
+            --sidebar-hover: rgba(255,255,255,0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+        .sidebar {
+            background: var(--sidebar-bg);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: 240px;
+            padding: 1.5rem 0;
+        }
+        .sidebar h4 {
+            padding: 0 1.5rem;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+        .sidebar h4 i {
+            margin-right: 0.5rem;
+        }
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-nav a {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255,255,255,0.75);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: var(--sidebar-hover);
+            color: white;
+            border-left-color: var(--primary);
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        .card-stat {
+            border: none;
+            border-radius: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+        .card-stat .card-body {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-stat .stat-info h2 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .card-stat .stat-info p {
+            margin: 0.25rem 0 0 0;
+            opacity: 0.85;
+        }
+        .card-stat .stat-icon {
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+        .card-stat.bg-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; }
+        .card-stat.bg-success { background: linear-gradient(135deg, #059669, #047857); color: white; }
+        .card-stat.bg-info { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; }
+        .card-stat.bg-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .card-stat.bg-danger { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; }
+        .card-stat.bg-secondary { background: linear-gradient(135deg, #6b7280, #4b5563); color: white; }
+
+        .table-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .table-card .card-header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        .table thead th {
+            background: #f9fafb;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            padding: 0.75rem 1rem;
+            border: none;
+        }
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-color: #f3f4f6;
+        }
+        .badge-tipo {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-entrada { background: #dcfce7; color: #166534; }
+        .badge-salida { background: #fef3c7; color: #92400e; }
+        .badge-aprobado { background: #dcfce7; color: #166534; }
+        .badge-rechazado { background: #fee2e2; color: #991b1b; }
+        .badge-condicionado { background: #fef3c7; color: #92400e; }
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; position: relative; min-height: auto; }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <div class="col-md-2 sidebar">
+                <h4><i class="bi bi-shield-check"></i> Checklist</h4>
+                <ul class="sidebar-nav">
+                    <li><a href="/web/dashboard/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                    <li><a href="/web/turnos/"><i class="bi bi-clock"></i> Turnos</a></li>
+                    <li><a href="/web/vehiculos/"><i class="bi bi-truck"></i> Vehículos</a></li>
+                    <li><a href="/web/empleados/"><i class="bi bi-people"></i> Empleados</a></li>
+                    <li><a href="/web/conductores/"><i class="bi bi-person-badge"></i> Conductores</a></li>
+                    <li><a href="/web/checklists-tracto/"><i class="bi bi-clipboard-check"></i> Checklists</a></li>
+                    <li><a href="/web/evidencias/"><i class="bi bi-camera"></i> Evidencias</a></li>
+                    <li><a href="/web/auditoria/"><i class="bi bi-journal-text"></i> Auditoría</a></li>
+                    <li><a href="/web/reportes/"><i class="bi bi-graph-up"></i> Reportes</a></li>
+                    <li><a href="/web/guardias/"><i class="bi bi-shield"></i> Guardias</a></li>
+                </ul>
+            </div>
+
+            <div class="col-md-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2><i class="bi bi-file-earmark-bar-graph"></i> Reporte del Turno #{{ turno.id }}</h2>
+                        <p class="text-muted mb-0">
+                            {{ turno.fecha }} | {{ turno.get_tipo_turno_display }} |
+                            Guardia: {{ turno.guardia.username }} |
+                            {% if turno.abierto %}
+                                <span class="badge bg-success">Abierto</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Cerrado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="?export_csv=1" class="btn btn-success">
+                            <i class="bi bi-download"></i> Exportar CSV
+                        </a>
+                        <a href="/web/turnos/" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver a Turnos
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card card-stat bg-primary">
+                            <div class="card-body">
+                                <div class="stat-info">
+                                    <h2>{{ resumen.total_registros }}</h2>
+                                    <p>Total Accesos</p>
+                                </div>
+                                <i class="bi bi-car-front stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card card-stat bg-success">
+                            <div class="card-body">
+                                <div class="stat-info">
+                                    <h2>{{ resumen.entradas }}</h2>
+                                    <p>Entradas</p>
+                                </div>
+                                <i class="bi bi-arrow-down-circle stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card card-stat bg-warning">
+                            <div class="card-body">
+                                <div class="stat-info">
+                                    <h2>{{ resumen.salidas }}</h2>
+                                    <p>Salidas</p>
+                                </div>
+                                <i class="bi bi-arrow-up-circle stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card card-stat bg-info">
+                            <div class="card-body">
+                                <div class="stat-info">
+                                    <h2>{{ resumen.checklists_realizados }}</h2>
+                                    <p>Checklists Realizados</p>
+                                </div>
+                                <i class="bi bi-clipboard-check stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card card-stat bg-success">
+                            <div class="card-body">
+                                <div class="stat-info">
+                                    <h2>{{ resumen.checklists_aprobados }}</h2>
+                                    <p>Aprobados</p>
+                                </div>
+                                <i class="bi bi-check-circle stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card card-stat bg-danger">
+                            <div class="card-body">
+                                <div class="stat-info">
+                                    <h2>{{ resumen.checklists_rechazados }}</h2>
+                                    <p>Rechazados</p>
+                                </div>
+                                <i class="bi bi-x-circle stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card card-stat bg-warning">
+                            <div class="card-body">
+                                <div class="stat-info">
+                                    <h2>{{ resumen.checklists_condicionados }}</h2>
+                                    <p>Condicionados</p>
+                                </div>
+                                <i class="bi bi-exclamation-circle stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card table-card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-list-ul"></i> Registros de Acceso del Turno</span>
+                                <span class="badge bg-primary">{{ registros.count }} registros</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Hora</th>
+                                            <th>Tipo</th>
+                                            <th>Entidad</th>
+                                            <th>Placa / Clave</th>
+                                            <th>Persona</th>
+                                            <th>Checklist</th>
+                                            <th>Observaciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for reg in registros %}
+                                        <tr>
+                                            <td>{{ reg.fecha_hora|date:"H:i" }}</td>
+                                            <td>
+                                                <span class="badge badge-{% if reg.tipo_movimiento == 'entrada' %}entrada{% else %}salida{% endif %}">
+                                                    {{ reg.get_tipo_movimiento_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ reg.get_tipo_entidad_display }}</td>
+                                            <td>
+                                                <strong>{{ reg.vehiculo.placa|default:"-" }}</strong>
+                                                {% if reg.vehiculo.clave_interna %}
+                                                <br><small class="text-muted">{{ reg.vehiculo.clave_interna }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if reg.conductor %}
+                                                    {{ reg.conductor.nombre_completo }}
+                                                {% elif reg.empleado %}
+                                                    {{ reg.empleado.nombre_completo }}
+                                                {% elif reg.visitante %}
+                                                    {{ reg.visitante.nombre_completo }}
+                                                {% else %}
+                                                -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if reg.checklist_realizado %}
+                                                <span class="badge bg-success">Realizado</span>
+                                                {% elif reg.checklist_requerido %}
+                                                <span class="badge bg-warning">Pendiente</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ reg.observaciones|truncatechars:50 }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                No hay registros en este turno.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if checklists %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card table-card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-clipboard-check"></i> Checklists Tracto del Turno</span>
+                                <span class="badge bg-primary">{{ checklists.count }} checklists</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Hora</th>
+                                            <th>Vehículo</th>
+                                            <th>Conductor</th>
+                                            <th>Estatus</th>
+                                            <th>Guardia</th>
+                                            <th>Observaciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for chk in checklists %}
+                                        <tr>
+                                            <td>{{ chk.fecha_hora|date:"H:i" }}</td>
+                                            <td>
+                                                <strong>{{ chk.vehiculo.placa }}</strong>
+                                                {% if chk.vehiculo.clave_interna %}
+                                                <br><small class="text-muted">{{ chk.vehiculo.clave_interna }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ chk.conductor.nombre_completo|default:"-" }}</td>
+                                            <td>
+                                                {% if chk.estatus_general == 'aprobado' %}
+                                                <span class="badge badge-aprobado">Aprobado</span>
+                                                {% elif chk.estatus_general == 'rechazado' %}
+                                                <span class="badge badge-rechazado">Rechazado</span>
+                                                {% else %}
+                                                <span class="badge badge-condicionado">Condicionado</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ chk.guardia.username }}</td>
+                                            <td>{{ chk.observaciones_generales|truncatechars:50|default:"-" }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                No hay checklists en este turno.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

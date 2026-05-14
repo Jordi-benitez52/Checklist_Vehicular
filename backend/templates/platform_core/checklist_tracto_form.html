@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ titulo }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin:30px; background:#f4f6f8; }
+        .card { background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        label { display:block; margin-top:10px; }
+        input, textarea, select { width:100%; padding:10px; margin-top:6px; }
+        .btn { padding:10px 14px; border-radius:8px; text-decoration:none; background:#2563eb; color:white; border:none; margin-top:16px; cursor:pointer; display:inline-block; }
+        .grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+        h3 { margin-top:0; }
+        .item-box { border:1px solid #ddd; border-radius:8px; padding:12px; margin-top:10px; }
+    </style>
+</head>
+<body>
+    <h1>{{ titulo }}</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="card">
+            <h3>Datos generales</h3>
+
+            <label>Registro de acceso de tracto</label>
+            <select name="registro_acceso" required>
+                {% for r in registros %}
+                <option value="{{ r.id }}">
+                    {{ r.fecha_hora }} | {{ r.vehiculo.placa }} | {{ r.conductor.nombre_completo|default:"Sin conductor" }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <label>Estatus general</label>
+            <select name="estatus_general" required>
+                <option value="aprobado">Aprobado</option>
+                <option value="rechazado">Rechazado</option>
+                <option value="condicionado">Condicionado</option>
+            </select>
+
+            <label>Observaciones generales</label>
+            <textarea name="observaciones_generales"></textarea>
+
+            <label>Firma operador</label>
+            <textarea name="firma_operador_data" placeholder="Base64 o texto temporal"></textarea>
+
+            <label>Firma vigilante</label>
+            <textarea name="firma_vigilante_data" placeholder="Base64 o texto temporal"></textarea>
+
+            <label>Evidencias</label>
+            <input type="file" name="evidencias" multiple accept="image/*">
+        </div>
+
+        {% for seccion, items in secciones.items %}
+        <div class="card">
+            <h3>{{ seccion }}</h3>
+
+            {% for item in items %}
+            <div class="item-box">
+                <strong>{{ item.nombre }}</strong>
+
+                <label>Resultado</label>
+                <select name="item_{{ item.id }}_valor">
+                    <option value="">Selecciona</option>
+                    <option value="ok">Correcto</option>
+                    <option value="mal">Con daño / falla</option>
+                    <option value="na">No aplica</option>
+                </select>
+
+                <label>Observación</label>
+                <textarea name="item_{{ item.id }}_observacion"></textarea>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <div class="card">
+            <h3>Llantas por posición</h3>
+
+            <div class="grid">
+                {% for pos, label in llantas_posiciones %}
+                <div class="item-box">
+                    <strong>{{ label }}</strong>
+
+                    <label>Estado</label>
+                    <select name="llanta_{{ pos }}_estado">
+                        <option value="">Selecciona</option>
+                        <option value="ok">Correcta</option>
+                        <option value="regular">Regular</option>
+                        <option value="mal">Con daño</option>
+                        <option value="na">No aplica</option>
+                    </select>
+
+                    <label>Observación</label>
+                    <textarea name="llanta_{{ pos }}_observacion"></textarea>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn">Guardar checklist</button>
+        <a href="{% url 'web-checklists-tracto' %}" class="btn">Cancelar</a>
+    </form>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Accesos - Checklist Vehicular</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f8; }
+        .sidebar { background: #1e3a5f; min-height: 100vh; color: white; position: fixed; width: 240px; padding: 1.5rem 0; }
+        .sidebar h4 { padding: 0 1.5rem; margin-bottom: 2rem; font-weight: 600; }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav a { display: block; padding: 0.75rem 1.5rem; color: rgba(255,255,255,0.75); text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(255,255,255,0.1); color: white; border-left-color: #2563eb; }
+        .sidebar-nav a i { width: 24px; margin-right: 0.75rem; }
+        .main-content { margin-left: 240px; padding: 2rem; }
+        .card-stat { border: none; border-radius: 12px; }
+        .chart-card { border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 1.5rem; }
+        .table-card { border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        .table thead th { background: #f9fafb; color: #6b7280; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; padding: 0.75rem 1rem; border: none; }
+        .badge-tipo { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-entrada { background: #dcfce7; color: #166534; }
+        .badge-salida { background: #fef3c7; color: #92400e; }
+        @media (max-width: 768px) { .sidebar { width: 100%; position: relative; } .main-content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <div class="col-md-2 sidebar">
+                <h4><i class="bi bi-shield-check"></i> Checklist</h4>
+                <ul class="sidebar-nav">
+                    <li><a href="/web/dashboard/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                    <li><a href="/web/turnos/"><i class="bi bi-clock"></i> Turnos</a></li>
+                    <li><a href="/web/vehiculos/"><i class="bi bi-truck"></i> Vehículos</a></li>
+                    <li><a href="/web/empleados/"><i class="bi bi-people"></i> Empleados</a></li>
+                    <li><a href="/web/conductores/"><i class="bi bi-person-badge"></i> Conductores</a></li>
+                    <li><a href="/web/checklists-tracto/"><i class="bi bi-clipboard-check"></i> Checklists</a></li>
+                    <li><a href="/web/evidencias/"><i class="bi bi-camera"></i> Evidencias</a></li>
+                    <li><a href="/web/auditoria/"><i class="bi bi-journal-text"></i> Auditoría</a></li>
+                    <li><a href="/web/reportes/registros/" class="active"><i class="bi bi-graph-up"></i> Reportes</a></li>
+                </ul>
+            </div>
+
+            <div class="col-md-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-car-front"></i> Reporte de Accesos</h2>
+                    <a href="/web/dashboard/" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card card-stat bg-primary text-white p-3">
+                            <h3>{{ resumen.total }}</h3>
+                            <p class="mb-0">Total Accesos</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card card-stat bg-success text-white p-3">
+                            <h3>{{ resumen.entradas }}</h3>
+                            <p class="mb-0">Entradas</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card card-stat bg-warning text-white p-3">
+                            <h3>{{ resumen.salidas }}</h3>
+                            <p class="mb-0">Salidas</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card card-stat bg-info text-white p-3">
+                            <h3>{{ resumen.checklists }}</h3>
+                            <p class="mb-0">Con Checklist</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card chart-card">
+                            <h5><i class="bi bi-bar-chart"></i> Accesos por Hora</h5>
+                            <canvas id="chartAccesosHora" height="150"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card chart-card">
+                            <h5><i class="bi bi-pie-chart"></i> Accesos por Tipo</h5>
+                            <canvas id="chartAccesosTipo" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="card chart-card mb-4">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label">Fecha inicio</label>
+                            <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Fecha fin</label>
+                            <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Guardia</label>
+                            <select name="guardia" class="form-select">
+                                <option value="">Todos</option>
+                                {% for g in guardias %}
+                                <option value="{{ g.id }}" {% if guardia_filtro == g.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ g.username }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Movimiento</label>
+                            <select name="tipo_movimiento" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="entrada" {% if tipo_movimiento_filtro == 'entrada' %}selected{% endif %}>Entrada</option>
+                                <option value="salida" {% if tipo_movimiento_filtro == 'salida' %}selected{% endif %}>Salida</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Tipo Entidad</label>
+                            <select name="tipo_entidad" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="tracto" {% if tipo_entidad_filtro == 'tracto' %}selected{% endif %}>Tracto</option>
+                                <option value="empleado" {% if tipo_entidad_filtro == 'empleado' %}selected{% endif %}>Empleado</option>
+                                <option value="visitante" {% if tipo_entidad_filtro == 'visitante' %}selected{% endif %}>Visitante</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-filter"></i> Filtrar
+                            </button>
+                            <a href="/web/reportes/registros/" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Table -->
+                <div class="card table-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-list"></i> Registro de Accesos</span>
+                        <div class="d-flex gap-2">
+                            <button onclick="exportarCSV()" class="btn btn-sm btn-success">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar CSV
+                            </button>
+                            <button onclick="exportarPDF()" class="btn btn-sm btn-danger">
+                                <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="tablaRegistros">
+                            <thead>
+                                <tr>
+                                    <th>Evidencia</th>
+                                    <th>Fecha/Hora</th>
+                                    <th>Tipo</th>
+                                    <th>Placa</th>
+                                    <th>Conductor/Empleado</th>
+                                    <th>Turno</th>
+                                    <th>Checklist</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reg in registros %}
+                                <tr>
+                                    <td>
+                                        {% if reg.evidencia_fotografica %}
+                                        <img src="{{ media_url }}{{ reg.evidencia_fotografica }}" alt="Evidencia" style="max-width: 60px; max-height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('{{ media_url }}{{ reg.evidencia_fotografica }}', '_blank')">
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ reg.fecha_hora|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge badge-tipo badge-{% if reg.tipo_movimiento == 'entrada' %}entrada{% else %}salida{% endif %}">
+                                            {% if reg.tipo_movimiento == 'entrada' %}
+                                            <i class="bi bi-arrow-down-circle"></i> ENTRADA
+                                            {% else %}
+                                            <i class="bi bi-arrow-up-circle"></i> SALIDA
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ reg.vehiculo.placa|default:"-" }}</strong>
+                                        {% if reg.vehiculo.clave_interna %}
+                                        <br><small class="text-muted">{{ reg.vehiculo.clave_interna }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if reg.conductor %}
+                                            {{ reg.conductor.nombre_completo }}
+                                        {% elif reg.empleado %}
+                                            {{ reg.empleado.nombre_completo }}
+                                        {% elif reg.visitante %}
+                                            {{ reg.visitante.nombre_completo }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ reg.turno.guardia.username|default:"-" }}</td>
+                                    <td>
+                                        {% if reg.checklist_realizado %}
+                                        <span class="badge bg-success">OK</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pendiente</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">No hay registros.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        new Chart(document.getElementById('chartAccesosHora').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ movimientos_labels|safe }},
+                datasets: [{
+                    label: 'Movimientos',
+                    data: {{ movimientos_data|safe }},
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        new Chart(document.getElementById('chartAccesosTipo').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: {{ tipo_labels|safe }},
+                datasets: [{
+                    data: {{ tipo_data|safe }},
+                    backgroundColor: ['rgba(37, 99, 235, 0.85)', 'rgba(5, 150, 105, 0.85)', 'rgba(245, 158, 11, 0.85)', 'rgba(220, 38, 38, 0.85)']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        function exportarCSV() {
+            const table = document.getElementById('tablaRegistros');
+            let csv = '\uFEFF';
+            csv += 'Fecha,Hora,Tipo,Placa,Clave Interna,Persona,Turno,Checklist\n';
+            table.querySelectorAll('tbody tr').forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 1) {
+                    const fechaHora = cells[1].textContent.trim();
+                    const [fecha, hora] = fechaHora.split(' ');
+                    const tipo = cells[2].textContent.trim();
+                    const placa = cells[3].textContent.trim();
+                    const claveInterna = cells[3].querySelector('small') ? cells[3].querySelector('small').textContent.trim() : '';
+                    const persona = cells[4].textContent.trim();
+                    const turno = cells[5].textContent.trim();
+                    const checklist = cells[6].textContent.trim();
+                    csv += `"${fecha}","${hora}","${tipo}","${placa}","${claveInterna}","${persona}","${turno}","${checklist}"\n`;
+                }
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            const fecha = new Date().toISOString().slice(0,10);
+            link.download = 'reporte_accesos_' + fecha + '.csv';
+            link.click();
+        }
+
+        function exportarPDF() {
+            const table = document.getElementById('tablaRegistros');
+            const rows = table.querySelectorAll('tbody tr');
+            let html = '<html><head><meta charset="UTF-8"><title>Reporte de Accesos</title>';
+            html += '<style>body{font-family:Arial,sans-serif;padding:20px;} table{width:100%;border-collapse:collapse;} th,td{padding:8px;border:1px solid #ddd;text-align:left;font-size:12px;} th{background:#1e40af;color:white;} img{max-width:50px;}</style>';
+            html += '</head><body><h1>Reporte de Accesos</h1><p>Generado: ' + new Date().toLocaleString() + '</p>';
+            html += '<table><thead><tr><th>Evidencia</th><th>Fecha/Hora</th><th>Tipo</th><th>Placa</th><th>Persona</th><th>Turno</th><th>Checklist</th></tr></thead><tbody>';
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 1) {
+                    html += '<tr>';
+                    cells.forEach((cell, idx) => {
+                        if (idx === 0) {
+                            const img = cell.querySelector('img');
+                            html += '<td>' + (img ? '<img src="' + img.src + '">' : '-') + '</td>';
+                        } else {
+                            html += '<td>' + cell.textContent.trim() + '</td>';
+                        }
+                    });
+                    html += '</tr>';
+                }
+            });
+            html += '</tbody></table></body></html>';
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
+        }
+    </script>
+</body>
+</html>

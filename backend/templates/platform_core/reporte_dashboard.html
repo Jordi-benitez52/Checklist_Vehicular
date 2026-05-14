@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f8; }
+        .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .btn { padding:10px 14px; border-radius:8px; text-decoration:none; background:#2563eb; color:white; }
+        .card { background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        .grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
+        .mini { background:#fff; padding:14px; border-radius:10px; border:1px solid #ddd; }
+        .links a { margin-right: 12px; }
+    </style>
+</head>
+<body>
+    <div class="top">
+        <h1>Reportes</h1>
+        <a href="{% url 'web-admin-dashboard' %}" class="btn">Volver</a>
+    </div>
+
+    <div class="card">
+        <form method="get">
+            <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}">
+            <input type="date" name="fecha_fin" value="{{ fecha_fin }}">
+            <select name="guardia">
+                <option value="">Guardia</option>
+                {% for g in guardias %}
+                <option value="{{ g.id }}" {% if guardia == g.id|stringformat:"s" %}selected{% endif %}>
+                    {{ g.username }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit">Aplicar filtros</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="grid">
+            <div class="mini"><strong>Turnos total</strong><br>{{ resumen.turnos_total }}</div>
+            <div class="mini"><strong>Turnos abiertos</strong><br>{{ resumen.turnos_abiertos }}</div>
+            <div class="mini"><strong>Turnos cerrados</strong><br>{{ resumen.turnos_cerrados }}</div>
+            <div class="mini"><strong>Accesos total</strong><br>{{ resumen.accesos_total }}</div>
+            <div class="mini"><strong>Entradas</strong><br>{{ resumen.accesos_entradas }}</div>
+            <div class="mini"><strong>Salidas</strong><br>{{ resumen.accesos_salidas }}</div>
+            <div class="mini"><strong>Checklists total</strong><br>{{ resumen.checklists_total }}</div>
+            <div class="mini"><strong>Auditoría total</strong><br>{{ resumen.auditoria_total }}</div>
+        </div>
+    </div>
+
+    <div class="card links">
+        <a href="{% url 'web-reportes-turnos' %}" class="btn">Reporte de turnos</a>
+        <a href="{% url 'web-reportes-registros' %}" class="btn">Reporte de accesos</a>
+        <a href="{% url 'web-reportes-checklists' %}" class="btn">Reporte de checklist</a>
+        <a href="{% url 'web-reportes-auditoria' %}" class="btn">Reporte de auditoría</a>
+    </div>
+</body>
+</html>

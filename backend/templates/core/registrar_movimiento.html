@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Movimiento</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+        }
+        .topbar {
+            background: #1e3a8a;
+            color: white;
+            padding: 20px 30px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 5px 14px rgba(0,0,0,0.08);
+        }
+        h2 {
+            margin-top: 0;
+        }
+        form p {
+            margin-bottom: 16px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+        button, a.btn {
+            display: inline-block;
+            padding: 10px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            background: #1d4ed8;
+            color: white;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>Registrar Movimiento Vehicular</h1>
+    </div>
+
+    <div class="container">
+        <h2>Nuevo registro</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Guardar registro</button>
+            <a href="{% url 'guardia-dashboard' %}" class="btn">Volver</a>
+        </form>
+    </div>
+</body>
+</html>

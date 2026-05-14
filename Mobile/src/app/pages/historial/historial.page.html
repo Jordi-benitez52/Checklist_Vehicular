@@ -1,0 +1,85 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard-guardia"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Historial</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (filtroActivo) {
+    <ion-chip color="primary">
+      <ion-icon name="filter" class="ion-margin-end"></ion-icon>
+      {{ filtroActivo }}
+    </ion-chip>
+  }
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Movimientos recientes</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @if (movimientos.length === 0) {
+        <p class="ion-text-center ion-padding">No hay movimientos registrados.</p>
+      } @else {
+        <ion-list>
+          @for (mov of movimientos; track mov.id) {
+            <ion-item>
+              <ion-label>
+                <h2>
+                  <ion-icon [name]="mov.tipo_movimiento === 'entrada' ? 'arrow-down-circle' : 'arrow-up-circle'" [color]="mov.tipo_movimiento === 'entrada' ? 'success' : 'warning'"></ion-icon>
+                  {{ mov.vehiculo_info?.placa || mov.empleado_info?.numero_empleado || 'N/A' }}
+                </h2>
+                <p>
+                  <strong>{{ mov.tipo_entidad_display || mov.tipo_entidad }}</strong>
+                  |
+                  {{ mov.tipo_movimiento_display || mov.tipo_movimiento }}
+                </p>
+                <p>{{ mov.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</p>
+                <p class="text-muted">Guardia: {{ mov.guardia_username || 'N/A' }}</p>
+                @if (mov.observaciones) {
+                  <p class="text-small"><em>{{ mov.observaciones }}</em></p>
+                }
+                @if (mov.tiene_evidencia && mov.evidencia_fotografica) {
+                  <div class="evidencia-thumbnail">
+                    <img [src]="getEvidenciaUrl(mov)" alt="Evidencia" (click)="abrirEvidencia(mov)" />
+                  </div>
+                }
+              </ion-label>
+            </ion-item>
+          }
+        </ion-list>
+      }
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Checklists recientes</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @if (checklists.length === 0) {
+        <p class="ion-text-center ion-padding">No hay checklists registrados.</p>
+      } @else {
+        <ion-list>
+          @for (chk of checklists; track chk.id) {
+            <ion-item>
+              <ion-label>
+                <h2>
+                  <ion-icon name="clipboard" color="primary"></ion-icon>
+                  {{ chk.registro_acceso_info?.vehiculo_info?.placa || chk.registro_acceso || 'N/A' }}
+                </h2>
+                <p>Estatus: <strong>{{ chk.estatus_general }}</strong></p>
+                <p>{{ chk.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}</p>
+                @if (chk.observaciones_generales) {
+                  <p class="text-small"><em>{{ chk.observaciones_generales }}</em></p>
+                }
+              </ion-label>
+            </ion-item>
+          }
+        </ion-list>
+      }
+    </ion-card-content>
+  </ion-card>
+</ion-content>

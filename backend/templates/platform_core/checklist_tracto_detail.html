@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle checklist tracto</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin:30px; background:#f4f6f8; }
+        .card { background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        .grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+        ul { margin:0; padding-left:20px; }
+        img { max-width:220px; border-radius:8px; margin:8px; }
+        .btn { padding:10px 14px; border-radius:8px; text-decoration:none; background:#2563eb; color:white; }
+    </style>
+</head>
+<body>
+    <a href="{% url 'web-checklists-tracto' %}" class="btn">Volver</a>
+
+    <div class="card">
+        <h1>Detalle del checklist</h1>
+        <p><strong>Fecha/hora:</strong> {{ checklist.fecha_hora }}</p>
+        <p><strong>Placa:</strong> {{ checklist.vehiculo.placa }}</p>
+        <p><strong>Conductor:</strong> {{ checklist.conductor.nombre_completo|default:"-" }}</p>
+        <p><strong>Guardia:</strong> {{ checklist.guardia.username }}</p>
+        <p><strong>Estatus:</strong> {{ checklist.get_estatus_general_display }}</p>
+        <p><strong>Observaciones generales:</strong> {{ checklist.observaciones_generales|default:"Sin observaciones" }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Resultados</h2>
+        <ul>
+            {% for r in checklist.resultados.all %}
+            <li>
+                <strong>{{ r.item.get_seccion_display }} / {{ r.item.nombre }}:</strong>
+                {{ r.get_valor_display }}{% if r.observacion %} — {{ r.observacion }}{% endif %}
+            </li>
+            {% empty %}
+            <li>Sin resultados.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Llantas</h2>
+        <ul>
+            {% for l in checklist.llantas.all %}
+            <li>
+                <strong>{{ l.get_posicion_display }}:</strong>
+                {{ l.get_estado_display }}{% if l.observacion %} — {{ l.observacion }}{% endif %}
+            </li>
+            {% empty %}
+            <li>Sin llantas registradas.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Firmas</h2>
+        <p><strong>Firma operador:</strong> {% if checklist.firma_operador_data %}Registrada{% else %}No registrada{% endif %}</p>
+        <p><strong>Firma vigilante:</strong> {% if checklist.firma_vigilante_data %}Registrada{% else %}No registrada{% endif %}</p>
+    </div>
+
+    <div class="card">
+        <h2>Evidencias</h2>
+        {% for e in checklist.evidencias.all %}
+            <img src="{{ e.imagen.url }}" alt="evidencia">
+        {% empty %}
+            <p>Sin evidencias.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

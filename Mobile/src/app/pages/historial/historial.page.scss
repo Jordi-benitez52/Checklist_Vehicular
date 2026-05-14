@@ -1,0 +1,25 @@
+.evidencia-thumbnail {
+  margin-top: 8px;
+
+  img {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}
+
+.text-small {
+  font-size: 12px;
+}
+
+.text-muted {
+  color: #6b7280;
+}

@@ -1,0 +1,66 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>
+      <ion-icon name="shield-checkmark" class="ion-margin-end"></ion-icon>
+      Checklist Vehicular
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="login-container">
+    <div class="login-header">
+      <ion-icon name="car" class="login-icon"></ion-icon>
+      <h1>Control Vehicular</h1>
+      <p class="text-muted">Ingresa tus credenciales para continuar</p>
+    </div>
+
+    <ion-card class="login-card">
+      <ion-card-content>
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Usuario</ion-label>
+          <ion-input
+            [(ngModel)]="username"
+            type="text"
+            placeholder="Tu nombre de usuario"
+            autocomplete="username"
+            autocapitalize="none"
+            (keyup.enter)="passwordInput.setFocus()">
+          </ion-input>
+        </ion-item>
+
+        <ion-item class="ion-margin-bottom">
+          <ion-label position="stacked">Contraseña</ion-label>
+          <ion-input
+            #passwordInput
+            [(ngModel)]="password"
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="Tu contraseña"
+            autocomplete="current-password"
+            (keyup.enter)="login()">
+          </ion-input>
+          <ion-button slot="end" fill="clear" size="small" (click)="showPassword = !showPassword" class="password-toggle">
+            <ion-icon [name]="showPassword ? 'eye-off' : 'eye'"></ion-icon>
+          </ion-button>
+        </ion-item>
+
+        <ion-button
+          expand="block"
+          color="primary"
+          class="ion-margin-top"
+          (click)="login()"
+          [disabled]="isLoading || !username || !password">
+          <ion-icon [name]="isLoading ? 'hourglass' : 'log-in'" slot="start"></ion-icon>
+          @if (isLoading) {
+            <ion-spinner name="crescent" class="ion-margin-end"></ion-spinner>
+            Iniciando sesión...
+          } @else {
+            Iniciar Sesión
+          }
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <p class="version-text">v1.0.0</p>
+  </div>
+</ion-content>

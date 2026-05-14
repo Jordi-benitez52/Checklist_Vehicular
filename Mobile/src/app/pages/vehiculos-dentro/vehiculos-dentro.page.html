@@ -1,0 +1,111 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Vehículos Dentro</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (isLoading) {
+    <div class="ion-text-center ion-padding">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando...</p>
+    </div>
+  }
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="trail-sign" color="warning"></ion-icon>
+        Tractocamiones
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @if (tractos.length === 0) {
+        <p class="ion-text-center ion-padding ion-text-muted">No hay tractocamiones dentro</p>
+      } @else {
+        <ion-list>
+          @for (t of tractos; track t.id) {
+            <ion-item>
+              <ion-label>
+                <h2><strong>{{ t.placa }}</strong></h2>
+                <p>Clave: {{ t.clave_interna || 'N/A' }}</p>
+                <p>Marca: {{ t.marca || 'N/A' }} | Modelo: {{ t.modelo || 'N/A' }}</p>
+                @if (t.conductor_actual_info) {
+                  <p>Conductor: {{ t.conductor_actual_info.nombre_completo }}</p>
+                }
+              </ion-label>
+              <ion-button slot="end" size="small" color="warning" (click)="registrarSalida(t, 'tracto')">
+                <ion-icon name="log-out-outline" slot="start"></ion-icon>
+                Salida
+              </ion-button>
+            </ion-item>
+          }
+        </ion-list>
+      }
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="car" color="primary"></ion-icon>
+        Vehículos de Empresa
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @if (vehiculosEmpresa.length === 0) {
+        <p class="ion-text-center ion-padding ion-text-muted">No hay vehículos de empresa dentro</p>
+      } @else {
+        <ion-list>
+          @for (v of vehiculosEmpresa; track v.id) {
+            <ion-item>
+              <ion-label>
+                <h2><strong>{{ v.placa }}</strong></h2>
+                <p>Clave: {{ v.clave_interna || 'N/A' }}</p>
+                <p>Marca: {{ v.marca || 'N/A' }} | Modelo: {{ v.modelo || 'N/A' }}</p>
+                @if (v.ultimo_empleado_info) {
+                  <p>Empleado: {{ v.ultimo_empleado_info.nombre_completo }} ({{ v.ultimo_empleado_info.numero_empleado }})</p>
+                }
+              </ion-label>
+              <ion-button slot="end" size="small" color="primary" (click)="registrarSalida(v, 'empleado')">
+                <ion-icon name="log-out-outline" slot="start"></ion-icon>
+                Salida
+              </ion-button>
+            </ion-item>
+          }
+        </ion-list>
+      }
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="person" color="danger"></ion-icon>
+        Visitantes Pendientes de Salida
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @if (visitantesPendientes.length === 0) {
+        <p class="ion-text-center ion-padding ion-text-muted">No hay visitantes pendientes</p>
+      } @else {
+        <ion-list>
+          @for (vis of visitantesPendientes; track vis.id) {
+            <ion-item>
+              <ion-label>
+                <h2><strong>{{ vis.visitante_nombre || 'N/A' }}</strong></h2>
+                <p>Placas: {{ vis.visitante_placas || 'N/A' }}</p>
+                <p>Entrada: {{ vis.fecha_entrada | date:'dd/MM/yyyy HH:mm' }}</p>
+                <p>Turno: {{ vis.turno_tipo || 'N/A' }}</p>
+              </ion-label>
+              <ion-button slot="end" size="small" color="danger" (click)="registrarSalidaVisitante(vis)">
+                <ion-icon name="log-out-outline" slot="start"></ion-icon>
+                Salida
+              </ion-button>
+            </ion-item>
+          }
+        </ion-list>
+      }
+    </ion-card-content>
+  </ion-card>
+</ion-content>

@@ -1,0 +1,478 @@
+.empty-card {
+  text-align: center;
+  padding: 2rem;
+
+  .empty-icon {
+    font-size: 4rem;
+    color: var(--ion-color-warning);
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    font-weight: 600;
+    color: var(--ion-color-warning);
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.turno-info-card {
+  background: linear-gradient(135deg, var(--color-primary), #047857);
+  color: white;
+  border-radius: 16px;
+  margin-bottom: 16px;
+
+  .turno-info {
+    .turno-tipo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0.5rem 0;
+    }
+
+    .turno-fecha {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.85);
+      margin: 0;
+
+      ion-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+
+  .checklist-count {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .count-icon {
+      font-size: 2rem;
+      margin-bottom: 4px;
+    }
+
+    .count-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    .count-label {
+      font-size: 0.7rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+    }
+  }
+}
+
+.pendientes-card {
+  border-radius: 12px;
+  margin-bottom: 12px;
+
+  ion-grid {
+    padding: 0;
+  }
+
+  ion-col {
+    padding: 8px 4px;
+  }
+}
+
+.resumen-card {
+  border-radius: 12px;
+  margin-bottom: 16px;
+  transition: all 0.3s;
+
+  &.completo {
+    background: rgba(5, 150, 105, 0.1);
+    border: 2px solid var(--ion-color-success);
+  }
+
+  ion-grid {
+    padding: 8px;
+  }
+
+  .resumen-texto {
+    strong {
+      font-size: 0.95rem;
+      color: #374151;
+    }
+
+    .resumen-sub {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin: 4px 0 0 0;
+    }
+  }
+}
+
+ion-accordion-group {
+  margin-bottom: 16px;
+}
+
+ion-accordion {
+  margin-bottom: 8px;
+  border-radius: 12px;
+  overflow: hidden;
+
+  .accordion-header {
+    --background: #f9fafb;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    --inner-padding-end: 8px;
+
+    .accordion-icon {
+      color: var(--ion-color-primary);
+      margin-right: 12px;
+      font-size: 1.2rem;
+    }
+
+    ion-label {
+      strong {
+        font-size: 0.95rem;
+        color: #374151;
+      }
+
+      .accordion-sub {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin: 2px 0 0 0;
+      }
+    }
+  }
+
+  .accordion-content {
+    padding: 16px;
+    background: white;
+
+    ion-item {
+      --background: transparent;
+      --border-color: #e5e7eb;
+      --border-radius: 8px;
+      margin-bottom: 12px;
+    }
+  }
+}
+
+.accordion-next-btn {
+  margin-top: 16px;
+  --border-radius: 12px;
+}
+
+.grupo-seccion {
+  margin-bottom: 16px;
+
+  .grupo-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f3f4f6;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 8px;
+
+    .grupo-chevron {
+      transition: transform 0.2s;
+      margin-right: 8px;
+      color: #6b7280;
+
+      &.abierto {
+        transform: rotate(180deg);
+      }
+    }
+
+    .grupo-nombre {
+      flex: 1;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #374151;
+    }
+
+    .grupo-badge {
+      font-size: 0.75rem;
+    }
+  }
+
+  .grupo-items {
+    padding-left: 8px;
+  }
+}
+
+.items-list {
+  .item-row {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+
+    &.completado {
+      background: rgba(5, 150, 105, 0.05);
+      border: 1px solid rgba(5, 150, 105, 0.2);
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+
+      .item-nombre {
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .item-badge {
+        font-size: 0.7rem;
+      }
+    }
+
+    .item-segment {
+      margin-bottom: 0.5rem;
+    }
+
+    .item-observacion {
+      --background: transparent;
+      --padding-start: 0;
+      --padding-end: 0;
+      --inner-padding-end: 0;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.evidencia-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+
+  .evidencia-label {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.75rem;
+
+    ion-icon {
+      color: var(--ion-color-primary);
+      margin-right: 8px;
+    }
+  }
+
+  .file-input-wrapper {
+    position: relative;
+
+    input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-input-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: white;
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: var(--ion-color-primary);
+        color: var(--ion-color-primary);
+      }
+
+      ion-icon {
+        margin-right: 8px;
+        font-size: 1.5rem;
+      }
+    }
+  }
+
+  .evidencia-preview {
+    margin-top: 0.75rem;
+    text-align: center;
+
+    .evidencia-count {
+      font-size: 0.85rem;
+      color: var(--ion-color-success);
+      font-weight: 500;
+    }
+  }
+}
+
+.llantas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  .llanta-card {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 12px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+
+    &.completed {
+      border-color: var(--ion-color-success);
+      background: rgba(5, 150, 105, 0.05);
+    }
+
+    .llanta-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      .llanta-posicion {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #374151;
+      }
+
+      .llanta-badge {
+        font-size: 0.7rem;
+      }
+    }
+
+    .llanta-segment {
+      margin-bottom: 8px;
+
+      ion-segment-button {
+        font-size: 0.7rem;
+        min-height: 28px;
+        --padding-start: 4px;
+        --padding-end: 4px;
+      }
+    }
+
+    .llanta-obs {
+      --background: white;
+      --border-radius: 8px;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+.firmas-card {
+  ion-card-content {
+    padding-top: 0;
+  }
+
+  .firmas-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+
+    .firma-box {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 12px;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+
+      &.completada {
+        border-color: var(--ion-color-success);
+        background: rgba(5, 150, 105, 0.05);
+      }
+
+      .firma-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+
+        .firma-label {
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #374151;
+        }
+      }
+
+      .firma-canvas {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: white;
+        width: 100%;
+        height: 150px;
+        touch-action: none;
+      }
+
+      .firma-footer {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-top: 8px;
+      }
+    }
+  }
+}
+
+.errores-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+
+  ion-card-content {
+    padding: 12px 16px;
+  }
+
+  .errores-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+
+    ion-icon {
+      margin-right: 8px;
+      font-size: 1.2rem;
+    }
+
+    strong {
+      font-size: 0.9rem;
+    }
+  }
+
+  .errores-lista {
+    margin: 0;
+    padding-left: 20px;
+
+    li {
+      font-size: 0.85rem;
+      color: #7f1d1d;
+      margin-bottom: 4px;
+    }
+  }
+}
+
+.guardar-btn {
+  margin-top: 1rem;
+  border-radius: 12px;
+  height: 56px;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+ion-segment {
+  background: #f3f4f6;
+  border-radius: 8px;
+
+  ion-segment-button {
+    --indicator-color: var(--ion-color-primary);
+    --color: #6b7280;
+    --color-checked: white;
+    font-weight: 600;
+    font-size: 0.8rem;
+    min-height: 36px;
+  }
+}

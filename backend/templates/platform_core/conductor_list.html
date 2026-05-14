@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Conductores</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f8; }
+        h1 { margin-bottom: 20px; }
+        .topbar, .filters { margin-bottom: 20px; }
+        .btn {
+            display: inline-block; padding: 10px 14px; text-decoration: none;
+            background: #2563eb; color: white; border-radius: 6px; border: none;
+        }
+        .btn-gray { background: #6b7280; }
+        .btn-red { background: #dc2626; }
+        table {
+            width: 100%; border-collapse: collapse; background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #111827; color: white; }
+        .filters input, .filters select {
+            padding: 8px; margin-right: 8px; margin-bottom: 8px;
+        }
+        .msg { padding: 10px; background: #dbeafe; margin-bottom: 15px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <h1>Gestión de conductores</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="msg">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="topbar">
+        <a href="{% url 'web-conductor-nuevo' %}" class="btn">Agregar conductor</a>
+    </div>
+
+    <form method="get" class="filters">
+        <input type="text" name="q" placeholder="Buscar por nombre, licencia, teléfono o empresa" value="{{ q }}">
+
+        <select name="activo">
+            <option value="">Estado</option>
+            <option value="true" {% if activo == 'true' %}selected{% endif %}>Activo</option>
+            <option value="false" {% if activo == 'false' %}selected{% endif %}>Inactivo</option>
+        </select>
+
+        <button type="submit" class="btn btn-gray">Filtrar</button>
+        <a href="{% url 'web-conductores' %}" class="btn btn-gray">Limpiar</a>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre completo</th>
+                <th>Licencia</th>
+                <th>Teléfono</th>
+                <th>Empresa</th>
+                <th>Activo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for conductor in conductores %}
+            <tr>
+                <td>{{ conductor.nombre_completo }}</td>
+                <td>{{ conductor.licencia }}</td>
+                <td>{{ conductor.telefono }}</td>
+                <td>{{ conductor.empresa }}</td>
+                <td>{% if conductor.activo %}Sí{% else %}No{% endif %}</td>
+                <td>
+                    <a href="{% url 'web-conductor-editar' conductor.id %}" class="btn btn-gray">Editar</a>
+                    {% if conductor.activo %}
+                        <a href="{% url 'web-conductor-desactivar' conductor.id %}" class="btn btn-red">Desactivar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No hay conductores registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

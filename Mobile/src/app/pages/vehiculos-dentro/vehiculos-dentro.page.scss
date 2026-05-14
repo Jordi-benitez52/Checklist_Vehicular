@@ -1,0 +1,29 @@
+ion-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+ion-item {
+  --padding-start: 8px;
+  --inner-padding-end: 8px;
+}
+
+h2 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+p {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  margin: 2px 0;
+}
+
+ion-button {
+  margin-left: 8px;
+}
+
+.text-muted {
+  color: var(--ion-color-medium);
+}

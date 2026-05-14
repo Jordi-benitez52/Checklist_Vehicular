@@ -1,0 +1,784 @@
+<ion-header>
+  <ion-toolbar [color]="tipoRegistro === 'entrada' ? 'success' : 'warning'">
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/home'"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <ion-icon [name]="tipoRegistro === 'entrada' ? 'arrow-down-circle' : 'arrow-up-circle'" class="ion-margin-end"></ion-icon>
+      {{ tipoRegistro === 'entrada' ? 'Registro Entrada' : 'Registro Salida' }}
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (!turnoActual) {
+    <ion-card color="warning">
+      <ion-card-content class="ion-text-center">
+        <ion-icon name="alert-circle-outline" style="font-size: 4rem;" class="ion-margin-bottom"></ion-icon>
+        <h2>No tienes un turno abierto</h2>
+        <p class="ion-text-muted">Abre un turno para poder registrar accesos</p>
+        <ion-button expand="block" color="primary" class="ion-margin-top" [routerLink]="['/home']">
+          <ion-icon name="home" slot="start"></ion-icon>
+          Ir al Inicio
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  } @else {
+
+    <!-- Turno Info Bar - Siempre visible -->
+    <div class="turno-info-bar">
+      <div class="turno-info-content">
+        <ion-icon name="person-circle"></ion-icon>
+        <span class="turno-guardia">{{ user?.username || 'Guardia' }}</span>
+        <span class="turno-separator">|</span>
+        <ion-icon name="time-outline"></ion-icon>
+        <span class="turno-numero">Turno {{ turnoActual?.tipo_turno || 'N/A' }}</span>
+      </div>
+      <div class="turno-status">
+        <ion-icon name="lock-open"></ion-icon>
+        <span>Activo</span>
+      </div>
+    </div>
+
+    <!-- Tipo de Registro Toggle -->
+    <div class="registro-toggle">
+      <ion-segment [(ngModel)]="tipoRegistro" (ionChange)="onTipoRegistroChange()" class="tipo-segment">
+        <ion-segment-button value="entrada">
+          <ion-icon name="arrow-down-circle"></ion-icon>
+          <ion-label>ENTRADA</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="salida">
+          <ion-icon name="arrow-up-circle"></ion-icon>
+          <ion-label>SALIDA</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+
+    <!-- Pendientes de Salida -->
+    @if (tipoRegistro === 'salida') {
+      <div class="pendientes-section">
+        <h4 class="section-header">
+          <ion-icon name="list-outline"></ion-icon>
+          Pendientes de Salida
+        </h4>
+
+        @if (hayPendientes()) {
+          <ion-accordion-group multiple="true" class="pendientes-accordion">
+            @if (tractosPendientesSalida.length > 0) {
+              <ion-accordion value="tractos">
+                <ion-item slot="header" class="pendiente-header tracto-header">
+                  <ion-icon name="truck" slot="start"></ion-icon>
+                  <ion-label>
+                    <strong>Tractocamiones</strong>
+                    <p class="ion-text-small">{{ tractosPendientesSalida.length }} pendiente(s)</p>
+                  </ion-label>
+                  <ion-badge color="warning" slot="end">{{ tractosPendientesSalida.length }}</ion-badge>
+                </ion-item>
+                <div slot="content" class="pendiente-list">
+                  @for (tracto of tractosPendientesSalida; track tracto.id) {
+                    <ion-item button (click)="seleccionarTractoPendiente(tracto)" class="pendiente-item">
+                      <ion-label>
+                        <h3><strong>{{ tracto.conductor_nombre }}</strong></h3>
+                        <p>{{ tracto.vehiculo_placa }} | {{ tracto.vehiculo_clave_interna }}</p>
+                        <p class="text-small ion-text-muted">{{ tracto.fecha_entrada | date:'dd/MM HH:mm' }}</p>
+                      </ion-label>
+                    </ion-item>
+                  }
+                </div>
+              </ion-accordion>
+            }
+
+            @if (conductoresPendientesSalida.length > 0) {
+              <ion-accordion value="conductores">
+                <ion-item slot="header" class="pendiente-header conductor-header">
+                  <ion-icon name="person" slot="start"></ion-icon>
+                  <ion-label>
+                    <strong>Conductores</strong>
+                    <p class="ion-text-small">{{ conductoresPendientesSalida.length }} pendiente(s)</p>
+                  </ion-label>
+                  <ion-badge color="primary" slot="end">{{ conductoresPendientesSalida.length }}</ion-badge>
+                </ion-item>
+                <div slot="content" class="pendiente-list">
+                  @for (cond of conductoresPendientesSalida; track cond.id) {
+                    <ion-item button (click)="seleccionarConductorPendienteSalida(cond)" class="pendiente-item">
+                      <ion-label>
+                        <h3><strong>{{ cond.conductor_nombre || 'Sin nombre' }}</strong></h3>
+                        @if (cond.conductor_placa) {
+                          <p>Placa: {{ cond.conductor_placa }}</p>
+                        }
+                        <p class="text-small ion-text-muted">{{ cond.fecha_entrada | date:'dd/MM HH:mm' }}</p>
+                      </ion-label>
+                    </ion-item>
+                  }
+                </div>
+              </ion-accordion>
+            }
+
+            @if (empleadosEmpresaPendientesSalida.length > 0) {
+              <ion-accordion value="empleados-empresa">
+                <ion-item slot="header" class="pendiente-header empleado-header">
+                  <ion-icon name="business" slot="start"></ion-icon>
+                  <ion-label>
+                    <strong>Empleados Empresa</strong>
+                    <p class="ion-text-small">{{ empleadosEmpresaPendientesSalida.length }} pendiente(s)</p>
+                  </ion-label>
+                  <ion-badge color="success" slot="end">{{ empleadosEmpresaPendientesSalida.length }}</ion-badge>
+                </ion-item>
+                <div slot="content" class="pendiente-list">
+                  @for (emp of empleadosEmpresaPendientesSalida; track emp.id) {
+                    <ion-item button (click)="seleccionarEmpleadoEmpresaPendiente(emp)" class="pendiente-item">
+                      <ion-label>
+                        <h3><strong>{{ emp.empleado_nombre }}</strong></h3>
+                        <p>{{ emp.vehiculo_placa }} - {{ emp.vehiculo_marca }}</p>
+                        <p class="text-small ion-text-muted">{{ emp.fecha_entrada | date:'dd/MM HH:mm' }}</p>
+                      </ion-label>
+                    </ion-item>
+                  }
+                </div>
+              </ion-accordion>
+            }
+
+            @if (empleadosPropioPendientesSalida.length > 0) {
+              <ion-accordion value="empleados-propio">
+                <ion-item slot="header" class="pendiente-header propio-header">
+                  <ion-icon name="car" slot="start"></ion-icon>
+                  <ion-label>
+                    <strong>Empleados Vehículo Propio</strong>
+                    <p class="ion-text-small">{{ empleadosPropioPendientesSalida.length }} pendiente(s)</p>
+                  </ion-label>
+                  <ion-badge color="tertiary" slot="end">{{ empleadosPropioPendientesSalida.length }}</ion-badge>
+                </ion-item>
+                <div slot="content" class="pendiente-list">
+                  @for (emp of empleadosPropioPendientesSalida; track emp.id) {
+                    <ion-item button (click)="seleccionarEmpleadoPropioPendiente(emp)" class="pendiente-item">
+                      <ion-label>
+                        <h3><strong>{{ emp.empleado_nombre }}</strong></h3>
+                        <p>Placas: {{ emp.empleado_placas }}</p>
+                        <p class="text-small ion-text-muted">{{ emp.fecha_entrada | date:'dd/MM HH:mm' }}</p>
+                      </ion-label>
+                    </ion-item>
+                  }
+                </div>
+              </ion-accordion>
+            }
+
+            @if (visitantesPendientesSalida.length > 0) {
+              <ion-accordion value="visitantes">
+                <ion-item slot="header" class="pendiente-header visitante-header">
+                  <ion-icon name="person-outline" slot="start"></ion-icon>
+                  <ion-label>
+                    <strong>Visitantes</strong>
+                    <p class="ion-text-small">{{ visitantesPendientesSalida.length }} pendiente(s)</p>
+                  </ion-label>
+                  <ion-badge color="secondary" slot="end">{{ visitantesPendientesSalida.length }}</ion-badge>
+                </ion-item>
+                <div slot="content" class="pendiente-list">
+                  @for (vis of visitantesPendientesSalida; track vis.id) {
+                    <ion-item button (click)="seleccionarVisitantePendiente(vis)" class="pendiente-item">
+                      <ion-label>
+                        <h3><strong>{{ vis.visitante_nombre }}</strong></h3>
+                        <p>Placas: {{ vis.vehiculo_placa || vis.visitante_placas || 'N/A' }}</p>
+                        <p class="text-small ion-text-muted">{{ vis.fecha_entrada | date:'dd/MM HH:mm' }}</p>
+                      </ion-label>
+                    </ion-item>
+                  }
+                </div>
+              </ion-accordion>
+            }
+          </ion-accordion-group>
+        } @else {
+          <div class="no-pendientes">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            <p>No hay registros pendientes de salida</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Formularios de Entrada -->
+    @if (tipoRegistro === 'entrada') {
+      <div class="formularios-section">
+        <h4 class="section-header">
+          <ion-icon name="create-outline"></ion-icon>
+          Registrar Entrada
+        </h4>
+
+        <ion-accordion-group class="formularios-accordion">
+          <!-- Conductor -->
+          <ion-accordion value="conductor">
+            <ion-item slot="header" class="form-header conductor-header">
+              <ion-icon name="person" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Conductor</strong>
+                <p class="ion-text-small">Persona sin vehículo</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                <ion-item class="ion-margin-bottom">
+                  <ion-label position="stacked">Seleccionar Conductor *</ion-label>
+                  <ion-select [(ngModel)]="conductorId" placeholder="Elige un conductor" interface="popover" (ionChange)="onConductorSelect($event)">
+                    @for (conductor of conductoresDisponibles; track conductor.id) {
+                      <ion-select-option [value]="conductor.id">
+                        {{ conductor.nombre_completo }}
+                        @if (conductor.vehiculo_placa) {
+                          - ({{ conductor.vehiculo_placa }})
+                        }
+                      </ion-select-option>
+                    }
+                  </ion-select>
+                </ion-item>
+
+                @if (conductorId) {
+                  <ion-item color="light" class="info-item">
+                    <ion-icon name="information-circle" slot="start" color="primary"></ion-icon>
+                    <ion-label>
+                      <p>El conductor queda registrado pero su vehículo permanece en la empresa</p>
+                    </ion-label>
+                  </ion-item>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Tractocamión -->
+          <ion-accordion value="tracto">
+            <ion-item slot="header" class="form-header tracto-header">
+              <ion-icon name="truck" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Tractocamión</strong>
+                <p class="ion-text-small">Camión completo con conductor</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                <ion-item class="ion-margin-bottom search-item">
+                  <ion-label position="stacked">Buscar Tractocamión *</ion-label>
+                  <ion-input
+                    placeholder="Por placa o clave interna..."
+                    [(ngModel)]="busquedaVehiculo"
+                    (ionInput)="buscarTracto($event)"
+                    (ionFocus)="cargarTodosTractocamiones()"
+                    debounce="300"
+                    clearInput>
+                  </ion-input>
+                  @if (resultadosBusquedaVehiculo.length > 0) {
+                    <ion-icon name="search" slot="end" color="primary"></ion-icon>
+                  }
+                </ion-item>
+
+                @if (resultadosBusquedaVehiculo.length > 0) {
+                  <ion-list lines="none" class="results-list">
+                    @for (v of resultadosBusquedaVehiculo; track v.id) {
+                      <ion-item button (click)="seleccionarTracto(v)" class="result-item">
+                        <ion-icon name="truck" slot="start" color="warning"></ion-icon>
+                        <ion-label>
+                          <h3><strong>{{ v.placa }}</strong></h3>
+                          <p>{{ v.clave_interna }} | {{ v.marca }} {{ v.modelo }}</p>
+                        </ion-label>
+                      </ion-item>
+                    }
+                  </ion-list>
+                }
+
+                @if (vehiculoSeleccionado) {
+                  <ion-item color="light" class="selected-item">
+                    <ion-icon name="checkmark-circle" slot="start" color="success"></ion-icon>
+                    <ion-label>
+                      <strong>{{ vehiculoSeleccionado.placa }}</strong>
+                      <p>{{ vehiculoSeleccionado.clave_interna }} - {{ vehiculoSeleccionado.marca }}</p>
+                    </ion-label>
+                    <ion-button slot="end" fill="clear" size="small" color="danger" (click)="limpiarTracto()">
+                      <ion-icon name="close-circle"></ion-icon>
+                    </ion-button>
+                  </ion-item>
+
+                  <ion-item class="ion-margin-top">
+                    <ion-label position="stacked">Conductor Asignado *</ion-label>
+                    <ion-select [(ngModel)]="conductorId" placeholder="Seleccionar conductor" interface="popover">
+                      @for (conductor of getConductoresParaVehiculo(); track conductor.id) {
+                        <ion-select-option [value]="conductor.id">
+                          {{ conductor.nombre_completo }}
+                        </ion-select-option>
+                      }
+                    </ion-select>
+                  </ion-item>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Empleado Empresa -->
+          <ion-accordion value="empleado_empresa">
+            <ion-item slot="header" class="form-header empleado-header">
+              <ion-icon name="business" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Empleado (Vehículo Empresa)</strong>
+                <p class="ion-text-small">Empleado con vehículo asignado</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                <ion-item class="ion-margin-bottom search-item">
+                  <ion-label position="stacked">Buscar Empleado *</ion-label>
+                  <ion-input
+                    placeholder="Por nombre o número..."
+                    [(ngModel)]="busquedaEmpleado"
+                    (ionInput)="buscarEmpleado($event)"
+                    (ionFocus)="cargarTodosEmpleados()"
+                    debounce="300"
+                    clearInput>
+                  </ion-input>
+                </ion-item>
+
+                @if (resultadosBusquedaEmpleado.length > 0) {
+                  <ion-list lines="none" class="results-list">
+                    @for (emp of resultadosBusquedaEmpleado; track emp.id) {
+                      <ion-item button (click)="seleccionarEmpleado(emp)" class="result-item">
+                        <ion-icon name="person" slot="start" color="success"></ion-icon>
+                        <ion-label>
+                          <h3><strong>{{ emp.nombre_completo }}</strong></h3>
+                          <p>{{ emp.numero_empleado }} | {{ emp.departamento }}</p>
+                          @if (emp.vehiculo_placa) {
+                            <p class="text-success">
+                              <ion-icon name="car"></ion-icon>
+                              {{ emp.vehiculo_placa }} {{ emp.vehiculo_marca ? '- ' + emp.vehiculo_marca : '' }}
+                            </p>
+                          }
+                        </ion-label>
+                      </ion-item>
+                    }
+                  </ion-list>
+                }
+
+                @if (empleadoSeleccionado) {
+                  <ion-item color="light" class="selected-item">
+                    <ion-icon name="checkmark-circle" slot="start" color="success"></ion-icon>
+                    <ion-label>
+                      <strong>{{ empleadoSeleccionado.nombre_completo }}</strong>
+                      <p>{{ empleadoSeleccionado.numero_empleado }}</p>
+                      @if (vehiculoAsignadoInfo) {
+                        <p class="text-success">
+                          <ion-icon name="car"></ion-icon>
+                          Vehículo: {{ vehiculoAsignadoInfo.placa }} - {{ vehiculoAsignadoInfo.marca }}
+                        </p>
+                      }
+                    </ion-label>
+                    <ion-button slot="end" fill="clear" size="small" color="danger" (click)="limpiarEmpleado()">
+                      <ion-icon name="close-circle"></ion-icon>
+                    </ion-button>
+                  </ion-item>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Empleado Propio -->
+          <ion-accordion value="empleado_propio">
+            <ion-item slot="header" class="form-header propio-header">
+              <ion-icon name="car" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Empleado (Vehículo Propio)</strong>
+                <p class="ion-text-small">Empleado con vehículo personal</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                <ion-item class="ion-margin-bottom">
+                  <ion-label position="stacked">Nombre(s) *</ion-label>
+                  <ion-input placeholder="Ej: Juan" [(ngModel)]="empleadoPropioNombre" maxlength="50" style="text-transform: uppercase;"></ion-input>
+                </ion-item>
+
+                <ion-item class="ion-margin-bottom">
+                  <ion-label position="stacked">Apellido(s) *</ion-label>
+                  <ion-input placeholder="Ej: Pérez García" [(ngModel)]="empleadoPropioApellido" maxlength="50" style="text-transform: uppercase;"></ion-input>
+                </ion-item>
+
+                <ion-item class="ion-margin-bottom">
+                  <ion-label position="stacked">Marca / Modelo del vehículo *</ion-label>
+                  <ion-input placeholder="Ej: Toyota Corolla" [(ngModel)]="empleadoPropioMarca" maxlength="50"></ion-input>
+                </ion-item>
+
+                <ion-item class="ion-margin-bottom">
+                  <ion-label position="stacked">Placas *</ion-label>
+                  <ion-input placeholder="Ej: ABC-1234" [(ngModel)]="empleadoPropioPlaca" maxlength="10" style="text-transform: uppercase;"></ion-input>
+                </ion-item>
+
+                <div class="evidencia-section">
+                  <ion-button expand="block" color="medium" fill="outline" (click)="tomarFotoEvidencia()">
+                    <ion-icon name="camera" slot="start"></ion-icon>
+                    Agregar evidencia fotográfica
+                  </ion-button>
+                  @if (evidenciaPreview) {
+                    <div class="evidencia-preview">
+                      <img [src]="evidenciaPreview" alt="Evidencia">
+                      <ion-button fill="clear" color="danger" size="small" (click)="eliminarEvidencia()">
+                        <ion-icon name="trash"></ion-icon>
+                      </ion-button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Visitante -->
+          <ion-accordion value="visitante">
+            <ion-item slot="header" class="form-header visitante-header">
+              <ion-icon name="person-outline" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Visitante</strong>
+                <p class="ion-text-small">Proveedor o visitante externo</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                <ion-item class="ion-margin-bottom">
+                  <ion-label position="stacked">Nombre(s) *</ion-label>
+                  <ion-input placeholder="Ej: Juan" [(ngModel)]="visitantePrimerNombre" maxlength="50" style="text-transform: uppercase;"></ion-input>
+                </ion-item>
+
+                <ion-item class="ion-margin-bottom">
+                  <ion-label position="stacked">Apellido(s) *</ion-label>
+                  <ion-input placeholder="Ej: Pérez" [(ngModel)]="visitanteApellido" maxlength="50" style="text-transform: uppercase;"></ion-input>
+                </ion-item>
+
+                <ion-item class="ion-margin-bottom">
+                  <ion-label position="stacked">Placas del vehículo</ion-label>
+                  <ion-input placeholder="Ej: ABC-1234" [(ngModel)]="visitantePlacas" (ionInput)="onInputPlaca($event, 'visitante')" maxlength="8" style="text-transform: uppercase;"></ion-input>
+                </ion-item>
+
+                <ion-item class="ion-margin-bottom">
+                  <ion-label position="stacked">Motivo de la visita *</ion-label>
+                  <ion-select [(ngModel)]="visitanteMotivo" placeholder="Seleccionar motivo" interface="popover">
+                    <ion-select-option value="Entrega de mercancía">Entrega de mercancía</ion-select-option>
+                    <ion-select-option value="Visita a proveedor">Visita a proveedor</ion-select-option>
+                    <ion-select-option value="Mantenimiento">Mantenimiento</ion-select-option>
+                    <ion-select-option value="Capacitación">Capacitación</ion-select-option>
+                    <ion-select-option value="Visita general">Visita general</ion-select-option>
+                    <ion-select-option value="Otro">Otro</ion-select-option>
+                  </ion-select>
+                </ion-item>
+
+                <div class="evidencia-section">
+                  <ion-button expand="block" color="medium" fill="outline" (click)="tomarFotoEvidencia()">
+                    <ion-icon name="camera" slot="start"></ion-icon>
+                    Agregar evidencia fotográfica
+                  </ion-button>
+                  @if (evidenciaPreview) {
+                    <div class="evidencia-preview">
+                      <img [src]="evidenciaPreview" alt="Evidencia">
+                      <ion-button fill="clear" color="danger" size="small" (click)="eliminarEvidencia()">
+                        <ion-icon name="trash"></ion-icon>
+                      </ion-button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </ion-accordion>
+        </ion-accordion-group>
+      </div>
+    }
+
+    <!-- Formularios de Salida -->
+    @if (tipoRegistro === 'salida') {
+      <div class="formularios-section">
+        <h4 class="section-header">
+          <ion-icon name="create-outline"></ion-icon>
+          Registrar Salida
+        </h4>
+
+        <ion-accordion-group class="formularios-accordion">
+          <!-- Conductor Salida -->
+          <ion-accordion value="conductor">
+            <ion-item slot="header" class="form-header conductor-header">
+              <ion-icon name="person" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Conductor</strong>
+                <p class="ion-text-small">Salida de conductor</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                @if (conductorId) {
+                  <ion-item color="light" class="info-item">
+                    <ion-label>
+                      <strong>{{ conductorNombre }} {{ conductorApellido }}</strong>
+                      <p>Placa: {{ conductorPlaca || 'N/A' }} | Marca: {{ conductorMarca || 'N/A' }}</p>
+                    </ion-label>
+                  </ion-item>
+
+                  <ion-item class="ion-margin-top">
+                    <ion-label position="stacked">Motivo de salida *</ion-label>
+                    <ion-select [(ngModel)]="motivoSalida" placeholder="Seleccionar motivo" interface="popover">
+                      <ion-select-option value="SE FUE EN TAXI">SE FUE EN TAXI</ion-select-option>
+                      <ion-select-option value="SALIO A PIE">SALIO A PIE</ion-select-option>
+                      <ion-select-option value="SALIDA A OTRA SUCURSAL">SALIDA A OTRA SUCURSAL</ion-select-option>
+                      <ion-select-option value="ENTREGA EXTERNA">ENTREGA EXTERNA</ion-select-option>
+                      <ion-select-option value="OTRO">OTRO</ion-select-option>
+                    </ion-select>
+                  </ion-item>
+
+                  <ion-item>
+                    <ion-label position="stacked">Observaciones adicionales</ion-label>
+                    <ion-textarea placeholder="Ej: Sale a pie, Sale con taxi..." [(ngModel)]="observaciones" rows="2" style="text-transform: uppercase;"></ion-textarea>
+                  </ion-item>
+
+                  <div class="evidencia-section ion-margin-top">
+                    <ion-button expand="block" color="danger" fill="outline" (click)="tomarFotoEvidencia()">
+                      <ion-icon name="camera" slot="start"></ion-icon>
+                      FOTO OBLIGATORIA *
+                    </ion-button>
+                    @if (evidenciaPreview) {
+                      <div class="evidencia-preview">
+                        <img [src]="evidenciaPreview" alt="Evidencia">
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <ion-item color="warning" class="ion-text-center">
+                    <ion-label>
+                      <p>Selecciona un conductor de la lista de pendientes</p>
+                    </ion-label>
+                  </ion-item>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Tractocamión Salida -->
+          <ion-accordion value="tracto">
+            <ion-item slot="header" class="form-header tracto-header">
+              <ion-icon name="truck" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Tractocamión</strong>
+                <p class="ion-text-small">Salida de tracto</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                @if (vehiculoSeleccionado && conductorId) {
+                  <ion-item color="light" class="info-item">
+                    <ion-label>
+                      <strong>{{ vehiculoSeleccionado.placa }}</strong>
+                      <p>{{ vehiculoSeleccionado.clave_interna }} - {{ vehiculoSeleccionado.marca }}</p>
+                    </ion-label>
+                  </ion-item>
+
+                  <ion-item class="ion-margin-top">
+                    <ion-label position="stacked">Motivo de salida *</ion-label>
+                    <ion-select [(ngModel)]="motivoSalida" placeholder="Seleccionar motivo" interface="popover">
+                      <ion-select-option value="SE FUE EN TAXI">SE FUE EN TAXI</ion-select-option>
+                      <ion-select-option value="SALIO A PIE">SALIO A PIE</ion-select-option>
+                      <ion-select-option value="SALIDA A OTRA SUCURSAL">SALIDA A OTRA SUCURSAL</ion-select-option>
+                      <ion-select-option value="ENTREGA EXTERNA">ENTREGA EXTERNA</ion-select-option>
+                      <ion-select-option value="OTRO">OTRO</ion-select-option>
+                    </ion-select>
+                  </ion-item>
+
+                  <ion-item>
+                    <ion-label position="stacked">Observaciones adicionales</ion-label>
+                    <ion-textarea placeholder="Observaciones..." [(ngModel)]="observaciones" rows="2" style="text-transform: uppercase;"></ion-textarea>
+                  </ion-item>
+
+                  <div class="evidencia-section ion-margin-top">
+                    <ion-button expand="block" color="danger" fill="outline" (click)="tomarFotoEvidencia()">
+                      <ion-icon name="camera" slot="start"></ion-icon>
+                      FOTO OBLIGATORIA *
+                    </ion-button>
+                    @if (evidenciaPreview) {
+                      <div class="evidencia-preview">
+                        <img [src]="evidenciaPreview" alt="Evidencia">
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <ion-item color="warning" class="ion-text-center">
+                    <ion-label>
+                      <p>Selecciona un tractocamión de la lista de pendientes</p>
+                    </ion-label>
+                  </ion-item>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Empleado Empresa Salida -->
+          <ion-accordion value="empleado_empresa">
+            <ion-item slot="header" class="form-header empleado-header">
+              <ion-icon name="business" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Empleado (Vehículo Empresa)</strong>
+                <p class="ion-text-small">Salida de empleado</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                @if (empleadoSeleccionado && vehiculoSeleccionado) {
+                  <ion-item color="light" class="info-item">
+                    <ion-label>
+                      <strong>{{ empleadoSeleccionado.nombre_completo }}</strong>
+                      <p>{{ empleadoSeleccionado.numero_empleado }}</p>
+                      <p class="text-success">
+                        <ion-icon name="car"></ion-icon>
+                        {{ vehiculoSeleccionado.placa }} - {{ vehiculoSeleccionado.marca }}
+                      </p>
+                    </ion-label>
+                  </ion-item>
+
+                  <div class="evidencia-section ion-margin-top">
+                    <ion-button expand="block" color="danger" fill="outline" (click)="tomarFotoEvidencia()">
+                      <ion-icon name="camera" slot="start"></ion-icon>
+                      FOTO OBLIGATORIA *
+                    </ion-button>
+                    @if (evidenciaPreview) {
+                      <div class="evidencia-preview">
+                        <img [src]="evidenciaPreview" alt="Evidencia">
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <ion-item color="warning" class="ion-text-center">
+                    <ion-label>
+                      <p>Selecciona un empleado de la lista de pendientes</p>
+                    </ion-label>
+                  </ion-item>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Empleado Propio Salida -->
+          <ion-accordion value="empleado_propio">
+            <ion-item slot="header" class="form-header propio-header">
+              <ion-icon name="car" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Empleado (Vehículo Propio)</strong>
+                <p class="ion-text-small">Salida de empleado</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                @if (empleadoPropioNombre || preSelectedVisitanteId) {
+                  <ion-item color="light" class="info-item">
+                    <ion-label>
+                      <strong>{{ empleadoPropioNombre }} {{ empleadoPropioApellido }}</strong>
+                      <p>Placas: {{ empleadoPropioPlaca }}</p>
+                      @if (empleadoPropioMarca) {
+                        <p>Marca: {{ empleadoPropioMarca }}</p>
+                      }
+                    </ion-label>
+                  </ion-item>
+
+                  <div class="evidencia-section ion-margin-top">
+                    <ion-button expand="block" color="danger" fill="outline" (click)="tomarFotoEvidencia()">
+                      <ion-icon name="camera" slot="start"></ion-icon>
+                      FOTO OBLIGATORIA *
+                    </ion-button>
+                    @if (evidenciaPreview) {
+                      <div class="evidencia-preview">
+                        <img [src]="evidenciaPreview" alt="Evidencia">
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <ion-item color="warning" class="ion-text-center">
+                    <ion-label>
+                      <p>Selecciona un empleado de la lista de pendientes</p>
+                    </ion-label>
+                  </ion-item>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Visitante Salida -->
+          <ion-accordion value="visitante">
+            <ion-item slot="header" class="form-header visitante-header">
+              <ion-icon name="person-outline" slot="start"></ion-icon>
+              <ion-label>
+                <strong>Visitante</strong>
+                <p class="ion-text-small">Salida de visitante</p>
+              </ion-label>
+              <ion-icon name="chevron-down" slot="end" class="accordion-icon"></ion-icon>
+            </ion-item>
+            <div slot="content" class="form-content">
+              <div class="form-section">
+                @if (preSelectedVisitanteId) {
+                  <ion-item color="light" class="info-item">
+                    <ion-label>
+                      <strong>{{ visitantePrimerNombre }} {{ visitanteApellido }}</strong>
+                      <p>Placas: {{ visitantePlacas || 'N/A' }}</p>
+                    </ion-label>
+                  </ion-item>
+
+                  <ion-item class="ion-margin-top">
+                    <ion-label position="stacked">Observaciones de salida</ion-label>
+                    <ion-textarea placeholder="Ej: Terminó su visita, Entrega completada..." [(ngModel)]="observaciones" rows="2" style="text-transform: uppercase;"></ion-textarea>
+                  </ion-item>
+
+                  <div class="evidencia-section ion-margin-top">
+                    <ion-button expand="block" color="danger" fill="outline" (click)="tomarFotoEvidencia()">
+                      <ion-icon name="camera" slot="start"></ion-icon>
+                      FOTO OBLIGATORIA *
+                    </ion-button>
+                    @if (evidenciaPreview) {
+                      <div class="evidencia-preview">
+                        <img [src]="evidenciaPreview" alt="Evidencia">
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <ion-item color="warning" class="ion-text-center">
+                    <ion-label>
+                      <p>Selecciona un visitante de la lista de pendientes</p>
+                    </ion-label>
+                  </ion-item>
+                }
+              </div>
+            </div>
+          </ion-accordion>
+        </ion-accordion-group>
+      </div>
+    }
+
+    <!-- Botón Registrar -->
+    <div class="registrar-section">
+      <ion-button
+        expand="block"
+        [color]="tipoRegistro === 'entrada' ? 'success' : 'warning'"
+        (click)="registrar()"
+        [disabled]="!puedeRegistrar"
+        class="registrar-btn">
+        <ion-icon [name]="tipoRegistro === 'entrada' ? 'checkmark-circle' : 'checkmark-done-circle'" slot="start"></ion-icon>
+        REGISTRAR {{ tipoRegistro === 'entrada' ? 'ENTRADA' : 'SALIDA' }}
+      </ion-button>
+
+      @if (!puedeRegistrar) {
+        <p class="help-text ion-text-center ion-text-muted">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          Completa todos los campos obligatorios para registrar
+        </p>
+      }
+    </div>
+
+    <!-- Input oculto para evidencia -->
+    <input
+      id="fileInputEvidencia"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      style="display: none;"
+      (change)="onEvidenciaSelected($event)" />
+  }
+</ion-content>

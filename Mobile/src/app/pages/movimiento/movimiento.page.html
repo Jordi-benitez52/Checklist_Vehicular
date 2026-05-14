@@ -1,0 +1,32 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Registrar movimiento</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Movimiento vehicular</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">Placa</ion-label>
+        <ion-input [(ngModel)]="placa"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Tipo</ion-label>
+        <ion-select [(ngModel)]="tipo">
+          <ion-select-option value="entrada">Entrada</ion-select-option>
+          <ion-select-option value="salida">Salida</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-button expand="block" class="ion-margin-top" (click)="registrarMovimiento()">
+        Guardar movimiento
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

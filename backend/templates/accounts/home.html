@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio | Checklist Vehicular</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #1f2937;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f172a, #1d4ed8);
+            color: white;
+            padding: 50px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0 0 10px;
+            font-size: 38px;
+        }
+
+        .header p {
+            max-width: 750px;
+            margin: 0 auto 20px;
+            font-size: 18px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 22px;
+            background: white;
+            color: #1d4ed8;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .section {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #1d4ed8;
+        }
+
+        .about {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            line-height: 1.7;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>{{ empresa_nombre }}</h1>
+        <p>{{ empresa_descripcion }}</p>
+        <a href="{% url 'login' %}" class="btn">Iniciar sesión</a>
+    </div>
+
+    <div class="section">
+        <div class="cards">
+            <div class="card">
+                <h3>Usuarios registrados</h3>
+                <p>{{ total_users }}</p>
+            </div>
+            <div class="card">
+                <h3>Perfiles del sistema</h3>
+                <p>{{ total_profiles }}</p>
+            </div>
+            <div class="card">
+                <h3>Administradores</h3>
+                <p>{{ total_admins }}</p>
+            </div>
+            <div class="card">
+                <h3>Guardias</h3>
+                <p>{{ total_guardias }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="about">
+            <h2>Información general del sistema</h2>
+            <p>
+                Este sistema fue diseñado para apoyar el control de accesos vehiculares,
+                fortalecer la supervisión operativa y digitalizar el registro de movimientos
+                en caseta.
+            </p>
+            <p>
+                La solución contempla una interfaz administrativa para supervisión y una interfaz
+                operativa para personal de control, facilitando el acceso a información básica,
+                consulta de actividades y futuras funcionalidades relacionadas con registros vehiculares.
+            </p>
+        </div>
+    </div>
+
+    <div class="footer">
+        Checklist Vehicular · Plataforma de control operativo
+    </div>
+
+</body>
+</html>

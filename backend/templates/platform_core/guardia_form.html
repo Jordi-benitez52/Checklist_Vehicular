@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ titulo }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin:30px; background:#f4f6f8; }
+        .card { background:white; padding:20px; border-radius:12px; max-width:700px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        label { display:block; margin-top:12px; font-weight:600; }
+        input, select { width:100%; padding:10px; margin-top:6px; border:1px solid #ddd; border-radius:6px; box-sizing: border-box; }
+        .btn { padding:10px 14px; border-radius:8px; text-decoration:none; background:#2563eb; color:white; border:none; margin-top:16px; cursor:pointer; display:inline-block; }
+        .btn-secondary { background:#6b7280; margin-left:10px; }
+        .btn-danger { background:#dc2626; }
+        img { width:90px; height:90px; object-fit:cover; border-radius:50%; display:block; margin-top:10px; }
+        .error { background:#fee2e2; color:#dc2626; padding:10px; border-radius:6px; margin-bottom:15px; }
+        .warning { background:#fef3c7; color:#92400e; padding:10px; border-radius:6px; margin-bottom:15px; }
+        .success { background:#dcfce7; color:#166534; padding:10px; border-radius:6px; margin-bottom:15px; }
+        .char-count { font-size: 11px; color: #6b7280; float: right; }
+        small { color: #6b7280; font-weight: normal; }
+    </style>
+</head>
+<body>
+    <h1>{{ titulo }}</h1>
+
+    <div class="card">
+        {% if messages %}
+            {% for msg in messages %}
+                {% if 'error' in message.tags %}
+                <div class="error">{{ msg }}</div>
+                {% elif 'warning' in message.tags %}
+                <div class="warning">{{ msg }}</div>
+                {% else %}
+                <div class="success">{{ msg }}</div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" onsubmit="return validarFormulario()">
+            {% csrf_token %}
+
+            {% if is_create %}
+            <label>Usuario * <span class="char-count">(máx 150)</span></label>
+            <input type="text" name="username" id="username" maxlength="150" required>
+
+            <label>Nombre completo * <span class="char-count">(máx 120)</span></label>
+            <input type="text" name="full_name" id="full_name" maxlength="120" required>
+
+            <label>Rol *</label>
+            <select name="role" id="role" required>
+                <option value="guardia">Guardia</option>
+                <option value="admin">Administrador</option>
+            </select>
+
+            <label>Correo <span class="char-count">(máx 254)</span></label>
+            <input type="email" name="email" id="email" maxlength="254">
+
+            <label>Teléfono <span class="char-count">(máx 20)</span></label>
+            <input type="text" name="phone" id="phone" maxlength="20">
+
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+
+            <label>Contraseña * <span class="char-count">(mín 8, máx 128)</span></label>
+            <input type="password" name="password" id="password" maxlength="128" required pattern=".{8,}" title="Mínimo 8 caracteres">
+
+            <label>Confirmar Contraseña *</label>
+            <input type="password" name="password_confirm" id="password_confirm" maxlength="128" required>
+
+            {% else %}
+            <label>Usuario</label>
+            <input type="text" value="{{ usuario.username }}" disabled>
+
+            <label>Nombre completo * <span class="char-count">(máx 120)</span></label>
+            <input type="text" name="full_name" id="full_name" maxlength="120" value="{{ profile.full_name|default:'' }}" required>
+
+            <label>Rol</label>
+            <select name="role" id="role">
+                <option value="guardia" {% if profile.role == 'guardia' %}selected{% endif %}>Guardia</option>
+                <option value="admin" {% if profile.role == 'admin' %}selected{% endif %}>Administrador</option>
+            </select>
+
+            <label>Correo <span class="char-count">(máx 254)</span></label>
+            <input type="email" name="email" id="email" maxlength="254" value="{{ usuario.email|default:'' }}">
+
+            <label>Teléfono <span class="char-count">(máx 20)</span></label>
+            <input type="text" name="phone" id="phone" maxlength="20" value="{{ profile.phone|default:'' }}">
+
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+
+            <label>{% if is_create %}Contraseña{% else %}Nueva Contraseña{% endif %} <span class="char-count">(mín 8, máx 128 - dejar en blanco para no cambiar)</span></label>
+            <input type="password" name="password" id="password" maxlength="128" {% if is_create %}required{% endif %} pattern=".{8,}" title="Mínimo 8 caracteres">
+
+            <label>Confirmar Contraseña</label>
+            <input type="password" name="password_confirm" id="password_confirm" maxlength="128" {% if is_create %}required{% endif %}>
+
+            {% endif %}
+
+            <label>Foto de perfil</label>
+            <input type="file" name="photo" accept="image/*">
+
+            {% if profile.photo %}
+                <img src="{{ profile.photo.url }}" alt="foto actual">
+            {% endif %}
+
+            <div>
+                <button type="submit" class="btn">Guardar</button>
+                <a href="{% url 'web-guardias' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function validarFormulario() {
+            var password = document.getElementById('password').value;
+            var passwordConfirm = document.getElementById('password_confirm').value;
+
+            if (password || passwordConfirm) {
+                if (password.length < 8) {
+                    alert('La contraseña debe tener al menos 8 caracteres.');
+                    return false;
+                }
+                if (password !== passwordConfirm) {
+                    alert('Las contraseñas no coinciden. Por favor, verificalas.');
+                    return false;
+                }
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

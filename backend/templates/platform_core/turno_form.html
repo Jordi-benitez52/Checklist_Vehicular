@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ titulo }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f8; }
+        h1 { margin-bottom: 20px; }
+        form {
+            background: white; padding: 20px; max-width: 800px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+        label { display: block; margin-top: 12px; font-weight: bold; }
+        input, select, textarea {
+            width: 100%; padding: 10px; margin-top: 6px;
+            border: 1px solid #ccc; border-radius: 6px;
+        }
+        .btn {
+            display: inline-block; padding: 10px 14px; text-decoration: none;
+            background: #2563eb; color: white; border-radius: 6px; border: none; margin-top: 16px;
+        }
+        .btn-gray { background: #6b7280; }
+    </style>
+</head>
+<body>
+    <h1>{{ titulo }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Guardia</label>
+        <select name="guardia" required>
+            <option value="">Seleccione</option>
+            {% for usuario in guardias %}
+                <option value="{{ usuario.id }}"
+                    {% if turno and turno.guardia.id == usuario.id %}selected{% endif %}>
+                    {{ usuario.username }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>Tipo turno</label>
+        <select name="tipo_turno" required>
+            <option value="">Seleccione</option>
+            <option value="matutino" {% if turno.tipo_turno == 'matutino' %}selected{% endif %}>Matutino</option>
+            <option value="vespertino" {% if turno.tipo_turno == 'vespertino' %}selected{% endif %}>Vespertino</option>
+            <option value="nocturno" {% if turno.tipo_turno == 'nocturno' %}selected{% endif %}>Nocturno</option>
+        </select>
+
+        <label>Fecha</label>
+        <input type="date" name="fecha" value="{{ turno.fecha|date:'Y-m-d'|default:'' }}" required>
+
+        <label>Hora apertura</label>
+        <input type="datetime-local" name="hora_apertura" value="{% if turno.hora_apertura %}{{ turno.hora_apertura|date:'Y-m-d\\TH:i' }}{% endif %}" required>
+
+        <label>Observaciones</label>
+        <textarea name="observaciones">{{ turno.observaciones|default:'' }}</textarea>
+
+        <label>
+            <input type="checkbox" name="abierto" {% if turno.abierto or turno == None %}checked{% endif %}>
+            Abierto
+        </label>
+
+        <button type="submit" class="btn">Guardar</button>
+        <a href="{% url 'web-turnos' %}" class="btn btn-gray">Volver</a>
+    </form>
+</body>
+</html>

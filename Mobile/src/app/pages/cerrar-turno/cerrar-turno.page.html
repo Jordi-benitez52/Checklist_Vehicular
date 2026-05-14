@@ -1,0 +1,133 @@
+<ion-header>
+  <ion-toolbar color="danger">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>
+      <ion-icon name="close-circle" class="ion-margin-end"></ion-icon>
+      Cerrar Turno
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (!turnoActual) {
+    <ion-card color="warning">
+      <ion-card-content class="ion-text-center">
+        <ion-icon name="alert-circle" style="font-size: 3rem;" class="ion-margin-bottom"></ion-icon>
+        <h3>No tienes un turno abierto</h3>
+        <p>No puedes cerrar un turno sin tener uno abierto.</p>
+        <ion-button expand="block" routerLink="/home" class="ion-margin-top">
+          Ir al Inicio
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  } @else {
+    <ion-card class="resumen-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="document-text" class="ion-margin-end"></ion-icon>
+          Resumen del Turno
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="4"><strong>Tipo:</strong></ion-col>
+            <ion-col size="8">{{ turnoActual.tipo_turno | titlecase }}</ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="4"><strong>Fecha:</strong></ion-col>
+            <ion-col size="8">{{ turnoActual.fecha }}</ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="4"><strong>Inicio:</strong></ion-col>
+            <ion-col size="8">{{ turnoActual.hora_apertura | date:'shortTime' }}</ion-col>
+          </ion-row>
+        </ion-grid>
+
+        <div class="stats-resumen">
+          <div class="stat-item entrada">
+            <ion-icon name="arrow-down-circle"></ion-icon>
+            <span class="stat-num">{{ stats.entradas }}</span>
+            <span class="stat-label">Entradas</span>
+          </div>
+          <div class="stat-item salida">
+            <ion-icon name="arrow-up-circle"></ion-icon>
+            <span class="stat-num">{{ stats.salidas }}</span>
+            <span class="stat-label">Salidas</span>
+          </div>
+          <div class="stat-item checklist">
+            <ion-icon name="clipboard"></ion-icon>
+            <span class="stat-num">{{ stats.checklists }}</span>
+            <span class="stat-label">Checklists</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="observaciones-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="create" class="ion-margin-end"></ion-icon>
+          Observaciones de Cierre
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">Observaciones (opcional)</ion-label>
+          <ion-textarea
+            [(ngModel)]="observacionesCierre"
+            placeholder="Escribe alguna observación o comentario sobre el turno..."
+            rows="4"
+            maxlength="200">
+          </ion-textarea>
+          <ion-note slot="helper">{{ observacionesCierre.length }}/200</ion-note>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="firma-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="create" class="ion-margin-end"></ion-icon>
+          Firma del Guardia
+        </ion-card-title>
+        <ion-card-subtitle>
+          Dibuja tu firma en el recuadro
+        </ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="canvas-container">
+          <canvas
+            #canvasFirma
+            class="firma-canvas"
+            (mousedown)="startDraw($event)"
+            (mousemove)="draw($event)"
+            (mouseup)="stopDraw()"
+            (mouseleave)="stopDraw()"
+            (touchstart)="startDraw($event)"
+            (touchmove)="draw($event)"
+            (touchend)="stopDraw()">
+          </canvas>
+          <ion-button fill="clear" size="small" color="medium" (click)="clearFirma()" class="clear-btn">
+            <ion-icon name="trash-outline" slot="start"></ion-icon>
+            Limpiar
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-button
+      expand="block"
+      size="large"
+      color="danger"
+      class="cerrar-btn ion-margin-top"
+      (click)="cerrarTurno()">
+      <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+      CERRAR TURNO
+    </ion-button>
+  }
+</ion-content>

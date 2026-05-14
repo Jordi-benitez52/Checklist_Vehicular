@@ -1,0 +1,97 @@
+.resumen-card {
+  margin-bottom: 16px;
+}
+
+.stats-resumen {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  min-width: 70px;
+
+  ion-icon {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+  }
+
+  .stat-num {
+    font-size: 1.4rem;
+    font-weight: bold;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  &.entrada {
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--ion-color-success);
+  }
+
+  &.salida {
+    background: rgba(255, 87, 34, 0.1);
+    color: var(--ion-color-warning);
+  }
+
+  &.checklist {
+    background: rgba(33, 150, 243, 0.1);
+    color: var(--ion-color-primary);
+  }
+}
+
+.observaciones-card {
+  margin-bottom: 16px;
+}
+
+.firma-card {
+  margin-bottom: 16px;
+}
+
+.canvas-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+}
+
+.firma-canvas {
+  width: 100%;
+  max-width: 320px;
+  height: 150px;
+  border: 2px solid var(--ion-color-medium);
+  border-radius: 8px;
+  background: white;
+  touch-action: none;
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
+.clear-btn {
+  margin-top: 8px;
+}
+
+.cerrar-btn {
+  margin-top: 24px;
+  font-size: 1.1rem;
+}
+
+ion-card-title {
+  display: flex;
+  align-items: center;
+}
+
+ion-card-subtitle {
+  margin-top: 4px;
+  opacity: 0.8;
+}

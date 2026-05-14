@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial del turno</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin:30px; background:#f4f6f8; }
+        .card { background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        .btn { padding:10px 14px; border-radius:8px; text-decoration:none; background:#2563eb; color:white; display:inline-block; margin-bottom:16px; }
+        table { width:100%; border-collapse:collapse; background:white; }
+        th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; vertical-align:top; }
+        th { background:#111827; color:white; }
+    </style>
+</head>
+<body>
+    <a href="{% url 'web-turnos' %}" class="btn">Volver</a>
+
+    <div class="card">
+        <h1>Historial del turno</h1>
+        <p><strong>Guardia:</strong> {{ turno_obj.guardia.username }}</p>
+        <p><strong>Fecha:</strong> {{ turno_obj.fecha }}</p>
+        <p><strong>Tipo:</strong> {{ turno_obj.get_tipo_turno_display }}</p>
+        <p><strong>Apertura:</strong> {{ turno_obj.hora_apertura }}</p>
+        <p><strong>Cierre:</strong> {{ turno_obj.hora_cierre|default:"Abierto" }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Registros de acceso</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha/hora</th>
+                    <th>Movimiento</th>
+                    <th>Entidad</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in registros %}
+                <tr>
+                    <td>{{ r.fecha_hora }}</td>
+                    <td>{{ r.get_tipo_movimiento_display }}</td>
+                    <td>{{ r.get_tipo_entidad_display }}</td>
+                    <td>
+                        {% if r.tipo_entidad == 'tracto' %}
+                            {{ r.vehiculo.placa }} / {{ r.conductor.nombre_completo }}
+                        {% elif r.tipo_entidad == 'empleado' %}
+                            {{ r.vehiculo.placa }} / {{ r.empleado.nombre_completo }}
+                        {% else %}
+                            {{ r.visitante.nombre_completo }} / {{ r.visitante.placas }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">Sin registros.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Checklists de tracto</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha/hora</th>
+                    <th>Unidad</th>
+                    <th>Conductor</th>
+                    <th>Estatus</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in checklists %}
+                <tr>
+                    <td>{{ c.fecha_hora }}</td>
+                    <td>{{ c.vehiculo.placa }}</td>
+                    <td>{{ c.conductor.nombre_completo|default:"-" }}</td>
+                    <td>{{ c.get_estatus_general_display }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">Sin checklists.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Auditoría del turno</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha/hora</th>
+                    <th>Usuario</th>
+                    <th>Módulo</th>
+                    <th>Acción</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in auditorias %}
+                <tr>
+                    <td>{{ a.fecha_hora }}</td>
+                    <td>{{ a.usuario.username|default:"-" }}</td>
+                    <td>{{ a.get_modulo_display }}</td>
+                    <td>{{ a.get_accion_display }}</td>
+                    <td>{{ a.descripcion }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">Sin eventos de auditoría.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

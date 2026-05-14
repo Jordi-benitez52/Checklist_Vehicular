@@ -1,0 +1,226 @@
+.user-card {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border-radius: 16px;
+  margin-bottom: 16px;
+
+  ion-card-content {
+    padding: 16px;
+  }
+}
+
+.user-avatar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+
+  .avatar-icon {
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+.user-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: white;
+}
+
+.user-role {
+  margin: 0 0 8px 0;
+
+  ion-badge {
+    text-transform: capitalize;
+  }
+}
+
+.user-date {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+
+  ion-icon {
+    margin-right: 4px;
+  }
+}
+
+.turno-card {
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.turno-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  .turno-icon {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+  }
+
+  .turno-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+  }
+
+  .turno-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+  }
+}
+
+.stats-card {
+  border-radius: 16px;
+  margin-bottom: 16px;
+
+  ion-card-header {
+    padding-bottom: 0;
+  }
+
+  ion-card-subtitle {
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  transition: transform 0.2s ease;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .stat-icon {
+    font-size: 2rem;
+    margin-bottom: 4px;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+  }
+
+  &.entrada {
+    background: rgba(5, 150, 105, 0.1);
+    .stat-icon { color: #059669; }
+    .stat-number { color: #059669; }
+  }
+
+  &.salida {
+    background: rgba(245, 158, 11, 0.1);
+    .stat-icon { color: #f59e0b; }
+    .stat-number { color: #f59e0b; }
+  }
+
+  &.checklist {
+    background: rgba(37, 99, 235, 0.1);
+    .stat-icon { color: #2563eb; }
+    .stat-number { color: #2563eb; }
+  }
+}
+
+.section-title {
+  color: #374151;
+  font-weight: 600;
+  margin: 24px 0 12px 0;
+  padding-left: 4px;
+
+  ion-icon {
+    color: #2563eb;
+  }
+}
+
+.action-card {
+  border-radius: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  .action-icon {
+    font-size: 2.5rem;
+  }
+
+  .chevron {
+    font-size: 1.5rem;
+    color: #9ca3af;
+  }
+
+  ion-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  ion-card-subtitle {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+
+  &.entrada-card {
+    border-left: 4px solid #059669;
+  }
+
+  &.salida-card {
+    border-left: 4px solid #f59e0b;
+  }
+
+  &.checklist-card {
+    border-left: 4px solid #2563eb;
+  }
+}
+
+.menu-list {
+  background: transparent;
+  padding: 0;
+
+  ion-item {
+    --background: white;
+    --border-color: #f3f4f6;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --inner-padding-end: 8px;
+
+    &:hover {
+      --background: #f9fafb;
+    }
+
+    h3 {
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 2px 0;
+    }
+
+    p {
+      color: #9ca3af;
+      font-size: 0.85rem;
+      margin: 0;
+    }
+  }
+}

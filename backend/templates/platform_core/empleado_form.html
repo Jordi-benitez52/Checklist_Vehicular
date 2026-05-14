@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ titulo }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f8; }
+        h1 { margin-bottom: 20px; }
+        form {
+            background: white; padding: 20px; max-width: 800px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+        label { display: block; margin-top: 12px; font-weight: bold; }
+        input, select {
+            width: 100%; padding: 10px; margin-top: 6px;
+            border: 1px solid #ccc; border-radius: 6px;
+        }
+        .btn {
+            display: inline-block; padding: 10px 14px; text-decoration: none;
+            background: #2563eb; color: white; border-radius: 6px; border: none; margin-top: 16px;
+        }
+        .btn-gray { background: #6b7280; }
+    </style>
+</head>
+<body>
+    <h1>{{ titulo }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Número de empleado</label>
+        <input type="text" name="numero_empleado" value="{{ empleado.numero_empleado|default:'' }}" required>
+
+        <label>Nombre completo</label>
+        <input type="text" name="nombre_completo" value="{{ empleado.nombre_completo|default:'' }}" required>
+
+        <label>Sucursal / departamento</label>
+        <select name="departamento" required>
+            <option value="">Seleccione</option>
+            <option value="CANCUN" {% if empleado.departamento == 'CANCUN' %}selected{% endif %}>CANCUN</option>
+            <option value="PROGRESO" {% if empleado.departamento == 'PROGRESO' %}selected{% endif %}>PROGRESO</option>
+            <option value="FLAMBOYANES" {% if empleado.departamento == 'FLAMBOYANES' %}selected{% endif %}>FLAMBOYANES</option>
+        </select>
+
+        <label>Puesto</label>
+        <input type="text" name="puesto" value="{{ empleado.puesto|default:'' }}">
+
+        <label>
+            <input type="checkbox" name="activo" {% if empleado.activo or empleado == None %}checked{% endif %}>
+            Activo
+        </label>
+
+        <button type="submit" class="btn">Guardar</button>
+        <a href="{% url 'web-empleados' %}" class="btn btn-gray">Volver</a>
+    </form>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Auditoría del sistema</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin:30px; background:#f4f6f8; }
+        .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .btn { padding:10px 14px; border-radius:8px; text-decoration:none; background:#2563eb; color:white; }
+        .card { background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+        table { width:100%; border-collapse:collapse; background:white; }
+        th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; vertical-align:top; }
+        th { background:#111827; color:white; }
+    </style>
+</head>
+<body>
+    <div class="top">
+        <h1>Auditoría del sistema</h1>
+        <a href="{% url 'web-admin-dashboard' %}" class="btn">Volver</a>
+    </div>
+
+    <div class="card">
+        <form method="get">
+            <input type="text" name="q" placeholder="Buscar usuario, descripción o entidad" value="{{ q }}">
+
+            <select name="modulo">
+                <option value="">Módulo</option>
+                <option value="turnos" {% if modulo == 'turnos' %}selected{% endif %}>Turnos</option>
+                <option value="accesos" {% if modulo == 'accesos' %}selected{% endif %}>Accesos</option>
+                <option value="checklist_tracto" {% if modulo == 'checklist_tracto' %}selected{% endif %}>Checklist tracto</option>
+                <option value="perfil" {% if modulo == 'perfil' %}selected{% endif %}>Perfil</option>
+            </select>
+
+            <select name="accion">
+                <option value="">Acción</option>
+                <option value="crear" {% if accion == 'crear' %}selected{% endif %}>Crear</option>
+                <option value="editar" {% if accion == 'editar' %}selected{% endif %}>Editar</option>
+                <option value="cerrar" {% if accion == 'cerrar' %}selected{% endif %}>Cerrar</option>
+            </select>
+
+            <select name="turno">
+                <option value="">Turno</option>
+                {% for t in turnos %}
+                <option value="{{ t.id }}" {% if turno == t.id|stringformat:"s" %}selected{% endif %}>
+                    {{ t.guardia.username }} - {{ t.fecha }} - {{ t.get_tipo_turno_display }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Filtrar</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha/hora</th>
+                <th>Usuario</th>
+                <th>Módulo</th>
+                <th>Acción</th>
+                <th>Entidad</th>
+                <th>Turno</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in auditorias %}
+            <tr>
+                <td>{{ a.fecha_hora }}</td>
+                <td>{{ a.usuario.username|default:"-" }}</td>
+                <td>{{ a.get_modulo_display }}</td>
+                <td>{{ a.get_accion_display }}</td>
+                <td>{{ a.entidad_tipo }} {% if a.entidad_id %}#{{ a.entidad_id }}{% endif %}</td>
+                <td>
+                    {% if a.turno %}
+                        {{ a.turno.guardia.username }} / {{ a.turno.fecha }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ a.descripcion }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No hay eventos de auditoría.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

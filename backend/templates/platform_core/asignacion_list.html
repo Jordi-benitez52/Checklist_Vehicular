@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Asignaciones</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f4f6f8; }
+        h1 { margin-bottom: 20px; }
+        .topbar, .filters { margin-bottom: 20px; }
+        .btn {
+            display: inline-block; padding: 10px 14px; text-decoration: none;
+            background: #2563eb; color: white; border-radius: 6px; border: none;
+        }
+        .btn-gray { background: #6b7280; }
+        .btn-red { background: #dc2626; }
+        table {
+            width: 100%; border-collapse: collapse; background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #111827; color: white; }
+        .filters input, .filters select {
+            padding: 8px; margin-right: 8px; margin-bottom: 8px;
+        }
+        .msg { padding: 10px; background: #dbeafe; margin-bottom: 15px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <h1>Asignación vehículo ↔ empleado</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="msg">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="topbar">
+        <a href="{% url 'web-asignacion-nuevo' %}" class="btn">Nueva asignación</a>
+    </div>
+
+    <form method="get" class="filters">
+        <input type="text" name="q" placeholder="Buscar por placa o empleado" value="{{ q }}">
+
+        <select name="activa">
+            <option value="">Estado</option>
+            <option value="true" {% if activa == 'true' %}selected{% endif %}>Activa</option>
+            <option value="false" {% if activa == 'false' %}selected{% endif %}>Inactiva</option>
+        </select>
+
+        <button type="submit" class="btn btn-gray">Filtrar</button>
+        <a href="{% url 'web-asignaciones' %}" class="btn btn-gray">Limpiar</a>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Vehículo</th>
+                <th>Empleado</th>
+                <th>Activa</th>
+                <th>Fecha asignación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asignacion in asignaciones %}
+            <tr>
+                <td>{{ asignacion.vehiculo.placa }}</td>
+                <td>{{ asignacion.empleado.nombre_completo }}</td>
+                <td>{% if asignacion.activa %}Sí{% else %}No{% endif %}</td>
+                <td>{{ asignacion.fecha_asignacion }}</td>
+                <td>
+                    <a href="{% url 'web-asignacion-editar' asignacion.id %}" class="btn btn-gray">Editar</a>
+                    {% if asignacion.activa %}
+                        <a href="{% url 'web-asignacion-desactivar' asignacion.id %}" class="btn btn-red">Desactivar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No hay asignaciones registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
