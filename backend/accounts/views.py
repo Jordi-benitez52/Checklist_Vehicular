@@ -1310,7 +1310,27 @@ class CreateTestUserView(APIView):
         )
 
         if not created:
-            return Response({'message': 'El usuario ya existe', 'username': username}, status=status.HTTP_200_OK)
+            existing_profile = getattr(user, 'profile', None)
+            if existing_profile:
+                return Response({'message': 'El usuario ya existe', 'username': username}, status=status.HTTP_200_OK)
+            user.set_password(password)
+            user.save()
+            profile = UserProfile.objects.create(
+                user=user,
+                full_name=full_name,
+                role=rol,
+                is_active=True
+            )
+            return Response({
+                'message': 'Usuario actualizado exitosamente (perfil creado)',
+                'user': {
+                    'id': user.id,
+                    'username': username,
+                    'email': email,
+                    'full_name': full_name,
+                    'rol': rol
+                }
+            }, status=status.HTTP_200_OK)
 
         user.set_password(password)
         user.save()
