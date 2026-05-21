@@ -52,11 +52,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://localhost:5173',
     'http://127.0.0.1:5173',
     'https://127.0.0.1:5173',
-    'https://df29-2806-250-430-cab1-00-1cf6.ngrok-free.app',
-    'https://3fe9-2806-250-430-cab1-00-1cf6.ngrok-free.app',
-    'http://df29-2806-250-430-cab1-00-1cf6.ngrok-free.app',
-    'http://3fe9-2806-250-430-cab1-00-1cf6.ngrok-free.app',
-    'https://*.ngrok-free.app',
+    'https://checklistvehicular-production.up.railway.app',
+    'https://*.up.railway.app',
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -76,6 +73,8 @@ CORS_ALLOWED_ORIGINS = [
     'https://192.168.0.248:5173',
     'http://192.168.0.248:8100',
     'https://192.168.0.248:8100',
+    'https://checklistvehicular-production.up.railway.app',
+    'https://*.up.railway.app',
 ]
 
 MIDDLEWARE = [
@@ -203,7 +202,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Restrict CORS to prevent cross-domain issues
-CORS_ALLOW_ALL_ORIGINS = True  # TEMPORARY for Ngrok testing
+CORS_ALLOW_ALL_ORIGINS = False  # Use CORS_ALLOWED_ORIGINS list instead
 CORS_EXPOSE_HEADERS = ['Content-Type', 'Authorization']
 
 CORS_ALLOW_CREDENTIALS = True
