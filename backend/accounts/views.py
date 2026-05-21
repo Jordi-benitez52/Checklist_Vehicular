@@ -1310,9 +1310,11 @@ class CreateTestUserView(APIView):
         )
 
         if not created:
-            existing_profile = getattr(user, 'profile', None)
-            if existing_profile:
-                return Response({'message': 'El usuario ya existe', 'username': username}, status=status.HTTP_200_OK)
+            try:
+                if user.profile:
+                    return Response({'message': 'El usuario ya existe', 'username': username}, status=status.HTTP_200_OK)
+            except UserProfile.DoesNotExist:
+                pass
             user.set_password(password)
             user.save()
             profile = UserProfile.objects.create(
