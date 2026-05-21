@@ -76,6 +76,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://192.168.0.248:8100',
     'https://checklistvehicular-production.up.railway.app',
     'https://*.up.railway.app',
+    'https://checklist-vehicular-git-main-jordi-rodriguez-s-projects.vercel.app',
 ]
 
 MIDDLEWARE = [
