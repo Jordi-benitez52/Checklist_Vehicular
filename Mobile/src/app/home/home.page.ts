@@ -208,6 +208,10 @@ export class HomePage implements OnInit {
   }
 
   irHistorial(): void {
+    if (this.user?.role === 'guardia') {
+      this.mostrarAlerta('Acceso restringido', 'No tienes permiso para ver el historial.');
+      return;
+    }
     this.router.navigateByUrl('/historial');
   }
 

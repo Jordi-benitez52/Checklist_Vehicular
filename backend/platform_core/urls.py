@@ -1,4 +1,5 @@
 from django.urls import path
+from .health import HealthCheckView
 
 from .views import (
     # Vehículos
@@ -54,6 +55,8 @@ from .views import (
     # Auditoría / reportes
     AuditLogListAPIView,
     ReportesAPIView,
+    ReportePDFAPIView,
+    ReporteExcelAPIView,
 
     # NUEVAS APIs: Asignaciones normalizadas
     AsignacionConductorVehiculoListAPIView,
@@ -151,6 +154,8 @@ urlpatterns = [
     # =========================
     path('auditoria/', AuditLogListAPIView.as_view(), name='platform-auditoria'),
     path('reportes/', ReportesAPIView.as_view(), name='platform-reportes'),
+    path('reportes/export/pdf/', ReportePDFAPIView.as_view(), name='platform-reportes-export-pdf'),
+    path('reportes/export/excel/', ReporteExcelAPIView.as_view(), name='platform-reportes-export-excel'),
 
     # =========================
     # NUEVAS APIs: Asignaciones normalizadas
@@ -171,4 +176,7 @@ urlpatterns = [
     path('notificaciones/<int:pk>/leer/', NotificacionMarkReadAPIView.as_view(), name='platform-notificacion-leer'),
     path('notificaciones/leer-todos/', NotificacionMarkAllReadAPIView.as_view(), name='platform-notificaciones-leer-todos'),
     path('notificaciones/enviar-turno/', EnviarNotificacionTurnoAPIView.as_view(), name='platform-enviar-notificacion-turno'),
+
+    # Health check
+    path('health/', HealthCheckView.as_view(), name='platform-health'),
 ]

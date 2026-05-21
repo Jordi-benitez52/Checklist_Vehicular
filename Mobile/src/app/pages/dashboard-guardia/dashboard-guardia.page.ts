@@ -14,6 +14,7 @@ export class DashboardGuardiaPage implements OnInit {
   user: any = null;
   turnoActivo: any = null;
   fechaActual = new Date();
+  isDarkMode: boolean = false;
 
   stats = {
     entradas: 0,
@@ -27,7 +28,25 @@ export class DashboardGuardiaPage implements OnInit {
     private router: Router,
     private alertController: AlertController,
     private loadingController: LoadingController
-  ) {}
+  ) {
+    this.loadDarkModePreference();
+  }
+
+  loadDarkModePreference(): void {
+    const saved = localStorage.getItem('darkMode');
+    this.isDarkMode = saved === 'true';
+  }
+
+  toggleDarkMode(): void {
+    this.isDarkMode = !this.isDarkMode;
+    if (this.isDarkMode) {
+      document.body.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      document.body.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
+  }
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
@@ -118,21 +137,9 @@ export class DashboardGuardiaPage implements OnInit {
     this.router.navigateByUrl('/checklist-tracto');
   }
 
-  irHistorial(): void {
-    this.router.navigateByUrl('/historial');
-  }
-
-  irVehiculosDentro(): void {
-    this.router.navigateByUrl('/vehiculos-dentro');
-  }
-
   irPerfil(): void {
     this.router.navigateByUrl('/mi-perfil');
   }
-
-  // irAsignaciones(): void {
-  //   this.router.navigateByUrl('/asignaciones');
-  // }
 
   async mostrarAlerta(header: string, message: string): Promise<void> {
     const alert = await this.alertController.create({

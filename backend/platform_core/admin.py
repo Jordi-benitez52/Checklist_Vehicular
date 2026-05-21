@@ -334,9 +334,10 @@ class ChecklistTractoItemCatalogoAdmin(admin.ModelAdmin):
         'seccion',
         'nombre',
         'orden',
+        'tipo_respuesta',
         'activo',
     )
-    list_filter = ('seccion', 'activo')
+    list_filter = ('seccion', 'tipo_respuesta', 'activo')
     search_fields = ('codigo', 'nombre')
     ordering = ('seccion', 'orden', 'id')
 

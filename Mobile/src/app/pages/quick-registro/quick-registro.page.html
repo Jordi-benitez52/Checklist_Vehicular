@@ -372,6 +372,30 @@
                     </ion-button>
                   </ion-item>
                 }
+
+                @if (empleadoSeleccionado && vehiculoAsignadoInfo) {
+                  <div class="evidencia-section ion-margin-top">
+                    <ion-button expand="block" color="danger" fill="outline" (click)="tomarFotoEvidencia()">
+                      <ion-icon name="camera" slot="start"></ion-icon>
+                      FOTO OBLIGATORIA *
+                    </ion-button>
+                    @if (evidenciaPreview) {
+                      <div class="evidencia-preview">
+                        <img [src]="evidenciaPreview" alt="Evidencia">
+                      </div>
+                    }
+                  </div>
+
+                  <ion-item class="ion-margin-top">
+                    <ion-label position="stacked">Observaciones del Guardia</ion-label>
+                    <ion-textarea
+                      placeholder="Observaciones adicionales..."
+                      [(ngModel)]="observaciones"
+                      rows="3"
+                      maxlength="200">
+                    </ion-textarea>
+                  </ion-item>
+                }
               </div>
             </div>
           </ion-accordion>

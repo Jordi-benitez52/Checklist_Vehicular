@@ -68,6 +68,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class TurnoSerializer(serializers.ModelSerializer):
     guardia_username = serializers.CharField(source='guardia.username', read_only=True)
     guardia_email = serializers.EmailField(source='guardia.email', read_only=True)
+    guardia_full_name = serializers.CharField(source='guardia.profile.full_name', read_only=True)
     tipo_turno_display = serializers.CharField(source='get_tipo_turno_display', read_only=True)
     observaciones = serializers.CharField(
         max_length=200, required=False, allow_blank=True,
@@ -85,6 +86,7 @@ class TurnoSerializer(serializers.ModelSerializer):
             'guardia',
             'guardia_username',
             'guardia_email',
+            'guardia_full_name',
             'tipo_turno',
             'tipo_turno_display',
             'fecha',
@@ -218,7 +220,6 @@ class VehiculoSerializer(serializers.ModelSerializer):
             'tipo_entidad_display',
             'categoria',
             'categoria_display',
-            'propietario',
             'empresa',
             'marca',
             'modelo',
@@ -413,16 +414,23 @@ class RegistroAccesoSerializer(serializers.ModelSerializer):
         return None
 
     def create(self, validated_data):
-        conductor_pendiente = validated_data.pop('conductor_pendiente_salida', False)
-        if conductor_pendiente in (True, 'True', 'true', '1', 1):
-            conductor_pendiente = True
-        else:
-            conductor_pendiente = False
-        registro = RegistroAcceso.objects.create(**validated_data)
-        if conductor_pendiente:
-            registro.conductor_pendiente_salida = True
-            registro.save(update_fields=['conductor_pendiente_salida'])
-        return registro
+        import traceback
+        try:
+            conductor_pendiente = validated_data.pop('conductor_pendiente_salida', False)
+            if conductor_pendiente in (True, 'True', 'true', '1', 1):
+                conductor_pendiente = True
+            else:
+                conductor_pendiente = False
+            print(f"[DEBUG] RegistroAcceso.create about to create with fields: {list(validated_data.keys())}", file=sys.stderr)
+            registro = RegistroAcceso.objects.create(**validated_data)
+            if conductor_pendiente:
+                registro.conductor_pendiente_salida = True
+                registro.save(update_fields=['conductor_pendiente_salida'])
+            return registro
+        except Exception as e:
+            print(f"[ERROR] RegistroAcceso.create failed: {type(e).__name__}: {str(e)}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            raise
 
 
 # =========================
@@ -529,6 +537,7 @@ class AuditoriaEventoSerializer(serializers.ModelSerializer):
 
 class ChecklistTractoItemCatalogoSerializer(serializers.ModelSerializer):
     seccion_display = serializers.CharField(source='get_seccion_display', read_only=True)
+    tipo_respuesta_display = serializers.CharField(source='get_tipo_respuesta_display', read_only=True)
 
     class Meta:
         model = ChecklistTractoItemCatalogo
@@ -540,6 +549,8 @@ class ChecklistTractoItemCatalogoSerializer(serializers.ModelSerializer):
             'nombre',
             'orden',
             'activo',
+            'tipo_respuesta',
+            'tipo_respuesta_display',
         ]
 
 
@@ -582,6 +593,7 @@ class ChecklistTractoEvidenciaSerializer(serializers.ModelSerializer):
             'id',
             'imagen',
             'descripcion',
+            'seccion',
             'uuid_evidencia',
         ]
         read_only_fields = [
@@ -623,6 +635,10 @@ class ChecklistTractoSerializer(serializers.ModelSerializer):
             'observaciones_generales',
             'firma_operador_data',
             'firma_vigilante_data',
+            'firma_supervisor_data',
+            'nombre_operador',
+            'nombre_vigilante',
+            'nombre_supervisor',
             'resultados',
             'llantas',
             'evidencias',
@@ -646,7 +662,8 @@ class ChecklistTractoCreateSerializer(serializers.Serializer):
     firma_operador_data = serializers.CharField(required=False, allow_blank=True)
     firma_vigilante_data = serializers.CharField(required=False, allow_blank=True)
     resultados = serializers.ListField(required=False)
-    llantas = serializers.ListField(required=False)
+    llaves = serializers.ListField(required=False)
+    evidencia_metadata = serializers.ListField(required=False)
 
     def validate(self, attrs):
         registro_id = attrs.get('registro_acceso')
@@ -668,7 +685,7 @@ class ChecklistTractoCreateSerializer(serializers.Serializer):
                 'registro_acceso': 'El checklist solo aplica para registros de tracto.'
             })
 
-        if hasattr(registro, 'checklist_tracto'):
+        if registro.checklist_realizado:
             raise serializers.ValidationError({
                 'registro_acceso': 'Este registro ya tiene checklist de tracto.'
             })
@@ -691,11 +708,14 @@ class ChecklistTractoCreateSerializer(serializers.Serializer):
 
         registro = validated_data.pop('registro_obj')
         resultados = validated_data.pop('resultados', [])
-        llantas = validated_data.pop('llantas', [])
+        llaves = validated_data.pop('llantas', [])
+        evidencia_metadata = validated_data.pop('evidencia_metadata', [])
 
         evidencias = []
         if request:
             evidencias = request.FILES.getlist('evidencias')
+
+        idx = 0
 
         checklist = ChecklistTracto.objects.create(
             registro_acceso=registro,
@@ -707,6 +727,10 @@ class ChecklistTractoCreateSerializer(serializers.Serializer):
             observaciones_generales=validated_data.get('observaciones_generales', ''),
             firma_operador_data=validated_data.get('firma_operador_data', ''),
             firma_vigilante_data=validated_data.get('firma_vigilante_data', ''),
+            firma_supervisor_data=validated_data.get('firma_supervisor_data', ''),
+            nombre_operador=validated_data.get('nombre_operador', ''),
+            nombre_vigilante=validated_data.get('nombre_vigilante', ''),
+            nombre_supervisor=validated_data.get('nombre_supervisor', ''),
         )
 
         for resultado in resultados:
@@ -722,7 +746,7 @@ class ChecklistTractoCreateSerializer(serializers.Serializer):
                     observacion=observacion,
                 )
 
-        for llanta in llantas:
+        for llanta in llaves:
             posicion = llanta.get('posicion')
             estado = llanta.get('estado')
             observacion = llanta.get('observacion', '')
@@ -736,11 +760,20 @@ class ChecklistTractoCreateSerializer(serializers.Serializer):
                 )
 
         for img in evidencias:
+            seccion = 'general'
+            descripcion = ''
+            if evidencia_metadata:
+                meta = next((m for m in evidencia_metadata if m.get('index', -1) == idx), None)
+                if meta:
+                    seccion = meta.get('seccion', 'general')
+                    descripcion = meta.get('descripcion', '')
             ChecklistTractoEvidencia.objects.create(
                 checklist=checklist,
                 imagen=img,
-                descripcion=''
+                descripcion=descripcion,
+                seccion=seccion
             )
+            idx += 1
 
         registro.checklist_realizado = True
         registro.save(update_fields=['checklist_realizado'])

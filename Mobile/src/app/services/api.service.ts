@@ -67,6 +67,21 @@ export class ApiService {
     return this.http.post<any>(this.authUrl() + '/accounts/login/', credentials);
   }
 
+  verifyCode(tempToken: string, code: string): Observable<any> {
+    return this.http.post<any>(this.authUrl() + '/accounts/login/verify-code/', {
+      temp_token: tempToken,
+      code
+    });
+  }
+
+  requestPasswordReset(email: string): Observable<any> {
+    return this.http.post<any>(this.authUrl() + '/accounts/password-reset/', { email });
+  }
+
+  confirmPasswordReset(data: { email: string; code: string; new_password: string }): Observable<any> {
+    return this.http.post<any>(this.authUrl() + '/accounts/password-reset/confirm/', data);
+  }
+
   refreshToken(refresh: string): Observable<any> {
     return this.http.post<any>(this.authUrl() + '/accounts/refresh/', { refresh });
   }
@@ -76,7 +91,7 @@ export class ApiService {
   }
 
   updateProfile(data: any): Observable<any> {
-    return this.http.patch<any>(this.authUrl() + '/accounts/me/', data);
+    return this.http.patch<any>(this.authUrl() + '/accounts/me/editar/', data);
   }
 
   changePassword(data: { actual: string; nueva: string }): Observable<any> {
@@ -263,8 +278,8 @@ export class ApiService {
     });
   }
 
-  getChecklistsRecientes(): Observable<any[]> {
-    return this.getChecklistsTracto();
+  getChecklistsRecientes(params?: any): Observable<any[]> {
+    return this.getChecklistsTracto(params);
   }
 
   crearChecklistTracto(data: FormData): Observable<any> {

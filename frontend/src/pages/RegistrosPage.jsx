@@ -41,10 +41,11 @@ const RegistrosPage = () => {
   };
 
   const registrosFiltrados = registros.filter((r) => {
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
-      r.vehiculo?.placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.conductor?.nombre_completo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.empleado?.nombre_completo?.toLowerCase().includes(searchTerm.toLowerCase());
+      r.vehiculo_info?.placa?.toLowerCase().includes(searchLower) ||
+      r.conductor_info?.nombre_completo?.toLowerCase().includes(searchLower) ||
+      r.empleado_info?.nombre_completo?.toLowerCase().includes(searchLower);
     const matchesTipo = !filtroTipo || r.tipo_movimiento === filtroTipo;
     return matchesSearch && matchesTipo;
   });
@@ -58,9 +59,9 @@ const RegistrosPage = () => {
         [
           formatDateTime(r.fecha_hora),
           r.tipo_movimiento || '',
-          r.vehiculo?.placa || '',
-          r.conductor?.nombre_completo || r.empleado?.nombre_completo || r.visitante?.nombre_completo || '',
-          r.guardia?.username || '',
+          r.vehiculo_info?.placa || '',
+          r.conductor_info?.nombre_completo || r.empleado_info?.nombre_completo || r.visitante_info?.nombre_completo || '',
+          r.guardia_username || '',
           r.checklist_realizado ? 'OK' : 'Pendiente',
         ].join(',')
       ),
@@ -172,15 +173,15 @@ const RegistrosPage = () => {
                   </span>
                 </td>
                 <td>
-                  <strong>{registro.vehiculo?.placa || '-'}</strong>
+                  <strong>{registro.vehiculo_info?.placa || '-'}</strong>
                 </td>
                 <td>
-                  {registro.conductor?.nombre_completo ||
-                   registro.empleado?.nombre_completo ||
-                   registro.visitante?.nombre_completo ||
+                  {registro.conductor_info?.nombre_completo ||
+                   registro.empleado_info?.nombre_completo ||
+                   registro.visitante_info?.nombre_completo ||
                    '-'}
                 </td>
-                <td>{registro.guardia?.username || '-'}</td>
+                <td>{registro.guardia_username || '-'}</td>
                 <td>
                   {registro.checklist_realizado ? (
                     <span className="badge badge-success">OK</span>

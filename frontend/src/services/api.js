@@ -1,22 +1,37 @@
 import axios from 'axios';
 
-const PLATFORM_API_BASE_URL = 'http://localhost:8000/api/platform';
-const ACCOUNTS_API_BASE_URL = 'http://localhost:8000/api/accounts';
+const API_HOST = window.location.hostname;
+const API_PORT = '8000';
+
+const IS_RAILWAY = API_HOST.includes('.railway.app') || API_HOST.includes('.up.railway.app');
+const IS_NGROK = API_HOST.includes('ngrok-free.app') || API_HOST.includes('ngrok.io');
+
+const PLATFORM_API_BASE_URL = IS_RAILWAY
+  ? `${window.location.protocol}//${API_HOST}/api/platform`
+  : IS_NGROK
+  ? 'https://3fe9-2806-250-430-cab1-00-1cf6.ngrok-free.app/api/platform'
+  : `http://${API_HOST}:${API_PORT}/api/platform`;
+
+const ACCOUNTS_API_BASE_URL = IS_RAILWAY
+  ? `${window.location.protocol}//${API_HOST}/api/accounts`
+  : IS_NGROK
+  ? 'https://3fe9-2806-250-430-cab1-00-1cf6.ngrok-free.app/api/accounts'
+  : `http://${API_HOST}:${API_PORT}/api/accounts`;
 
 const createApiInstance = (baseURL) => {
   const instance = axios.create({
     baseURL,
-    headers: {
-      'Content-Type': 'application/json',
-    },
     withCredentials: false,
   });
 
   instance.interceptors.request.use(
     (config) => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+      if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
       }
       return config;
     },
@@ -27,7 +42,8 @@ const createApiInstance = (baseURL) => {
     (response) => response,
     (error) => {
       if (error.response?.status === 401) {
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         window.location.href = '/login';
       }
@@ -42,8 +58,18 @@ export const platformApi = createApiInstance(PLATFORM_API_BASE_URL);
 export const accountsApi = createApiInstance(ACCOUNTS_API_BASE_URL);
 
 export const authService = {
-  login: (username, password) =>
-    accountsApi.post('/login/', { username, password }),
+  login: (data) =>
+    accountsApi.post('/login/', data),
+  verifyCode: (tempToken, code) =>
+    accountsApi.post('/login/verify-code/', { temp_token: tempToken, code }),
+  resendCode: (tempToken) =>
+    accountsApi.post('/login/resend-code/', { temp_token: tempToken }),
+  requestPasswordReset: (email) =>
+    accountsApi.post('/password-reset/', { email }),
+  confirmPasswordReset: (code, newPassword) =>
+    accountsApi.post('/password-reset/confirm/', { code, new_password: newPassword }),
+  verifyGoogleToken: (google_user_id, access_token) =>
+    accountsApi.post('/google/callback/', { google_user_id, access_token }),
   logout: () => accountsApi.post('/logout/'),
   getProfile: () => accountsApi.get('/me/'),
   updateProfile: (data) => accountsApi.patch('/me/editar/', data),
@@ -78,7 +104,7 @@ export const conductoresService = {
   getAll: (params = {}) => platformApi.get('/conductores/', { params }),
   getById: (id) => platformApi.get(`/conductores/${id}/`),
   create: (data) => platformApi.post('/conductores/crear/', data),
-  update: (id, data) => platformApi.put(`/conductores/${id}/`, data),
+  update: (id, data) => platformApi.put(`/conductores/${id}/editar/`, data),
   deactivate: (id) => platformApi.patch(`/conductores/${id}/desactivar/`),
   getDisponibles: () => platformApi.get('/conductores/disponibles/'),
 };

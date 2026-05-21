@@ -1,18 +1,36 @@
 from django.urls import path
 from .views import (
     LoginAPIView,
+    VerifyCodeAPIView,
+    ResendCodeAPIView,
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
     MeAPIView,
     MeUpdateAPIView,
     UsuarioGuardiaListAPIView,
     UsuarioGuardiaCreateAPIView,
     UsuarioGuardiaDetailAPIView,
+    Setup2FA,
+    Verify2FA,
+    Disable2FA,
+    LogoutAPIView,
+    GoogleOAuthCallbackView,
 )
 
 urlpatterns = [
     path('login/', LoginAPIView.as_view(), name='accounts-login'),
+    path('login/verify-code/', VerifyCodeAPIView.as_view(), name='accounts-login-verify-code'),
+    path('login/resend-code/', ResendCodeAPIView.as_view(), name='accounts-login-resend-code'),
+    path('logout/', LogoutAPIView.as_view(), name='accounts-logout'),
     path('me/', MeAPIView.as_view(), name='accounts-me'),
     path('me/editar/', MeUpdateAPIView.as_view(), name='accounts-me-editar'),
     path('usuarios/', UsuarioGuardiaListAPIView.as_view(), name='accounts-usuarios'),
     path('usuarios/crear/', UsuarioGuardiaCreateAPIView.as_view(), name='accounts-usuarios-crear'),
     path('usuarios/<int:pk>/', UsuarioGuardiaDetailAPIView.as_view(), name='accounts-usuarios-detail'),
+    path('2fa/setup/', Setup2FA.as_view(), name='accounts-2fa-setup'),
+    path('2fa/verify/', Verify2FA.as_view(), name='accounts-2fa-verify'),
+    path('2fa/disable/', Disable2FA.as_view(), name='accounts-2fa-disable'),
+    path('password-reset/', PasswordResetRequestView.as_view(), name='accounts-password-reset'),
+    path('password-reset/confirm/', PasswordResetConfirmView.as_view(), name='accounts-password-reset-confirm'),
+    path('google/callback/', GoogleOAuthCallbackView.as_view(), name='google-oauth-callback'),
 ]

@@ -53,14 +53,14 @@ const AsignacionesPage = () => {
     }
 
     const conductorActivo = asignaciones.find(
-      (a) => a.conductor?.id === parseInt(formData.conductor_id) && a.activa
+      (a) => a.conductor === parseInt(formData.conductor_id) && a.activa
     );
     if (conductorActivo) {
       return 'Este conductor ya tiene una asignación activa';
     }
 
     const vehiculoActivo = asignaciones.find(
-      (a) => a.vehiculo?.id === parseInt(formData.vehiculo_id) && a.activa
+      (a) => a.vehiculo === parseInt(formData.vehiculo_id) && a.activa
     );
     if (vehiculoActivo) {
       return 'Este vehículo ya tiene un conductor asignado';
@@ -180,14 +180,12 @@ const AsignacionesPage = () => {
             {asignaciones.map((asign) => (
               <tr key={asign.id}>
                 <td>
-                  <strong>{asign.conductor?.nombre_completo || asign.conductor?.nombre || '-'}</strong>
-                  <br />
-                  <small>{asign.conductor?.licencia || asign.conductor?.numero_licencia || '-'}</small>
+                  <strong>{asign.conductor_nombre || '-'}</strong>
                 </td>
                 <td>
-                  <strong>{asign.vehiculo?.placa || '-'}</strong>
+                  <strong>{asign.vehiculo_placa || '-'}</strong>
                   <br />
-                  <small>{asign.vehiculo?.marca} {asign.vehiculo?.modelo}</small>
+                  <small>{asign.vehiculo_marca || '-'}</small>
                 </td>
                 <td>
                   {asign.fecha_asignacion
@@ -252,7 +250,7 @@ const AsignacionesPage = () => {
                       .filter((c) => c.activo !== false)
                       .map((c) => {
                         const yaAsignado = asignaciones.some(
-                          (a) => a.conductor?.id === c.id && a.activa
+                          (a) => a.conductor === c.id && a.activa
                         );
                         return (
                           <option key={c.id} value={c.id} disabled={yaAsignado}>
@@ -284,7 +282,7 @@ const AsignacionesPage = () => {
                       .filter((v) => v.tipo_entidad === 'tracto' && v.activo !== false)
                       .map((v) => {
                         const yaAsignado = asignaciones.some(
-                          (a) => a.vehiculo?.id === v.id && a.activa
+                          (a) => a.vehiculo === v.id && a.activa
                         );
                         return (
                           <option key={v.id} value={v.id} disabled={yaAsignado}>

@@ -58,100 +58,129 @@
       </ion-card-content>
     </ion-card>
 
-    <!-- Pendientes Banner -->
-    @if (registrosPendientes.length > 0) {
-      <ion-card class="pendientes-card" color="light">
-        <ion-card-content>
-          <ion-grid>
-            <ion-row class="ion-align-items-center">
-              <ion-col size="2" class="ion-text-center">
-                <ion-icon name="alert-circle" size="large" color="warning"></ion-icon>
-              </ion-col>
-              <ion-col size="7">
-                <strong>{{ registrosPendientes.length }} checklist(s) pendiente(s)</strong>
-              </ion-col>
-              <ion-col size="3" class="ion-text-right">
-                <ion-button fill="clear" size="small" routerLink="/quick-registro">
-                  Ver <ion-icon slot="end" name="arrow-forward"></ion-icon>
+    <!-- Pendientes Section - Scrollable List -->
+    @if (registrosPendientes.length > 0 && !registroAccesoId) {
+      <ion-card class="pendientes-container">
+        <div class="pendientes-header">
+          <ion-icon name="clipboard" class="pendientes-icon"></ion-icon>
+          <span class="pendientes-title">CHECKLISTS PENDIENTES</span>
+          <ion-badge color="warning">{{ registrosPendientes.length }}</ion-badge>
+        </div>
+        <div class="pendientes-list">
+          @for (reg of registrosPendientes; track reg.id) {
+            <div class="pendiente-item" (click)="seleccionarPendiente(reg.id)">
+              <div class="pendiente-info">
+                <div class="pendiente-row principal">
+                  <ion-icon name="car" class="pendiente-icon"></ion-icon>
+                  <span class="pendiente-tracto">
+                    {{ reg.vehiculo_info?.clave_interna || reg.vehiculo_info?.placa || 'Sin placa' }}
+                  </span>
+                  <ion-badge [color]="getEmpresaBadgeColor(reg.vehiculo_info?.empresa)" class="pendiente-empresa-badge">
+                    {{ reg.vehiculo_info?.empresa || 'N/A' }}
+                  </ion-badge>
+                </div>
+                <div class="pendiente-row">
+                  <ion-icon name="person" class="pendiente-icon-small"></ion-icon>
+                  <span class="pendiente-empleado">
+                    {{ reg.conductor_info?.nombre_completo || 'Sin conductor' }}
+                  </span>
+                </div>
+                <div class="pendiente-row">
+                  <ion-icon name="time" class="pendiente-icon-small"></ion-icon>
+                  <span class="pendiente-hora">
+                    {{ reg.fecha_hora | date:'dd/MM HH:mm' }}
+                  </span>
+                  <ion-badge [color]="reg.tipo_movimiento === 'entrada' ? 'success' : 'primary'" class="pendiente-tipo-badge">
+                    {{ reg.tipo_movimiento_display || reg.tipo_movimiento }}
+                  </ion-badge>
+                </div>
+              </div>
+              <div class="pendiente-action">
+                <ion-button fill="solid" color="primary" size="small">
+                  <ion-icon slot="end" name="arrow-forward"></ion-icon>
+                  Revisar
                 </ion-button>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
+              </div>
+            </div>
+          }
+        </div>
+      </ion-card>
+    }
+
+    <!-- Empty state for no pendientes -->
+    @if (registrosPendientes.length === 0 && turnoActual && !registroAccesoId) {
+      <ion-card class="empty-pendientes-card">
+        <ion-card-content>
+          <ion-icon name="checkmark-circle" class="empty-pendientes-icon"></ion-icon>
+          <h3>No hay checklists pendientes</h3>
+          <p>Todos los registros han sido revisados. ¡Buen trabajo!</p>
         </ion-card-content>
       </ion-card>
     }
 
-    <!-- Resumen de progreso general -->
-    <ion-card class="resumen-card" [class.completo]="isFormComplete()">
-      <ion-card-content>
-        <ion-grid>
-          <ion-row class="ion-align-items-center">
-            <ion-col size="3" class="ion-text-center">
-              <ion-icon name="checkmark-circle" [color]="isFormComplete() ? 'success' : 'medium'" size="large"></ion-icon>
-            </ion-col>
-            <ion-col size="9">
-              <div class="resumen-texto">
-                <strong>{{ getProgresoTexto() }}</strong>
-                <p class="resumen-sub">{{ getPendientesTexto() }}</p>
-              </div>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-      </ion-card-content>
-    </ion-card>
-
     <!-- Formulario en Acordeón -->
-    <ion-accordion-group [value]="seccionActiva" (ionChange)="onSeccionChange($event)">
+    @if (registroAccesoId) {
+      <ion-accordion-group [value]="seccionActiva" (ionChange)="onSeccionChange($event)">
 
-      <!-- 1. Datos del Registro -->
-      <ion-accordion value="datos">
-        <ion-item slot="header" class="accordion-header">
-          <ion-icon name="document-text" slot="start" class="accordion-icon"></ion-icon>
-          <ion-label>
-            <strong>Datos del Registro</strong>
-            <p class="accordion-sub">{{ getDatosCompletadas() }} de 2 campos</p>
-          </ion-label>
-          @if (isDatosCompleto()) {
-            <ion-badge slot="end" color="success">Completo</ion-badge>
-          }
-        </ion-item>
-        <div slot="content" class="accordion-content">
-          <ion-item class="ion-margin-bottom">
-            <ion-label position="stacked">Seleccionar registro de acceso *</ion-label>
-            <ion-select [(ngModel)]="registroAccesoId" placeholder="Elige un registro pendiente" interface="popover" ok-text="Aceptar" cancel-text="Cancelar">
-              @for (r of registrosPendientes; track r.id) {
-                <ion-select-option [value]="r.id">
-                  {{ r.vehiculo_info?.clave_interna || r.vehiculo_info?.placa }} |
-                  {{ r.tipo_movimiento_display }} |
-                  {{ r.fecha_hora | date:'dd/MM HH:mm' }} |
-                  {{ r.conductor_info?.nombre_completo || 'Sin conductor' }}
+        <!-- 1. Datos del Registro -->
+        <ion-accordion value="datos">
+          <ion-item slot="header" class="accordion-header">
+            <ion-icon name="document-text" slot="start" class="accordion-icon"></ion-icon>
+            <ion-label>
+              <strong>Datos del Registro</strong>
+              <p class="accordion-sub">{{ getDatosCompletadas() }} de 2 campos</p>
+            </ion-label>
+            @if (isDatosCompleto()) {
+              <ion-badge slot="end" color="success">Completo</ion-badge>
+            }
+          </ion-item>
+          <div slot="content" class="accordion-content">
+            <!-- Info auto-llenada del registro seleccionado -->
+            @if (registroSeleccionado) {
+              <div class="registro-info-card">
+                <div class="info-row">
+                  <ion-icon name="car"></ion-icon>
+                  <span class="info-label">Vehículo:</span>
+                  <span class="info-value">
+                    {{ registroSeleccionado.vehiculo_info?.clave_interna || registroSeleccionado.vehiculo_info?.placa }} - 
+                    {{ registroSeleccionado.vehiculo_info?.empresa }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <ion-icon name="person"></ion-icon>
+                  <span class="info-label">Conductor:</span>
+                  <span class="info-value">{{ registroSeleccionado.conductor_info?.nombre_completo }}</span>
+                </div>
+                <div class="info-row">
+                  <ion-icon name="calendar"></ion-icon>
+                  <span class="info-label">Fecha/Hora:</span>
+                  <span class="info-value">{{ registroSeleccionado.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </div>
+            }
+
+            <ion-item class="ion-margin-bottom">
+              <ion-label position="stacked">Estatus general *</ion-label>
+              <ion-select [(ngModel)]="estatusGeneral" interface="popover" ok-text="Aceptar" cancel-text="Cancelar">
+                <ion-select-option value="aprobado">
+                  <ion-icon name="checkmark-circle" color="success" class="ion-margin-end"></ion-icon>
+                  Aprobado
                 </ion-select-option>
-              }
-            </ion-select>
-          </ion-item>
+                <ion-select-option value="rechazado">
+                  <ion-icon name="close-circle" color="danger" class="ion-margin-end"></ion-icon>
+                  Rechazado
+                </ion-select-option>
+                <ion-select-option value="condicionado">
+                  <ion-icon name="warning" color="warning" class="ion-margin-end"></ion-icon>
+                  Condicionado
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
 
-          <ion-item class="ion-margin-bottom">
-            <ion-label position="stacked">Estatus general *</ion-label>
-            <ion-select [(ngModel)]="estatusGeneral" interface="popover" ok-text="Aceptar" cancel-text="Cancelar">
-              <ion-select-option value="aprobado">
-                <ion-icon name="checkmark-circle" color="success" class="ion-margin-end"></ion-icon>
-                Aprobado
-              </ion-select-option>
-              <ion-select-option value="rechazado">
-                <ion-icon name="close-circle" color="danger" class="ion-margin-end"></ion-icon>
-                Rechazado
-              </ion-select-option>
-              <ion-select-option value="condicionado">
-                <ion-icon name="warning" color="warning" class="ion-margin-end"></ion-icon>
-                Condicionado
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-
-          <ion-item>
-            <ion-label position="stacked">Observaciones generales</ion-label>
-            <ion-textarea [(ngModel)]="observacionesGenerales" placeholder="Observaciones o comentarios..." rows="3"></ion-textarea>
-          </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Observaciones generales</ion-label>
+              <ion-textarea [(ngModel)]="observacionesGenerales" placeholder="Observaciones o comentarios..." rows="3"></ion-textarea>
+            </ion-item>
 
           <div class="evidencia-section">
             <ion-label class="evidencia-label">
@@ -207,30 +236,48 @@
               @if (isGrupoAbierto(grupo.seccion)) {
                 <div class="grupo-items">
                   @for (item of grupo.items; track item.id) {
-                    <div class="item-row" [class.completado]="resultados[item.id]?.valor">
+                    <div class="item-card" [class.completado]="resultados[item.id]?.valor">
                       <div class="item-header">
                         <span class="item-nombre">{{ item.nombre }}</span>
-                        @if (resultados[item.id]?.valor) {
-                          <ion-badge [color]="getValorBadgeColor(resultados[item.id].valor)" class="item-badge">
-                            {{ getValorLabel(resultados[item.id].valor) }}
-                          </ion-badge>
-                        }
+                        <ion-badge [color]="getValorBadgeColor(resultados[item.id]?.valor, item.tipo_respuesta)" class="item-badge">
+                          {{ getValorLabel(resultados[item.id]?.valor, item.tipo_respuesta) || 'Sin calificar' }}
+                        </ion-badge>
                       </div>
-                      <ion-segment [(ngModel)]="resultados[item.id].valor" class="item-segment" (ionChange)="onItemChange()">
-                        <ion-segment-button value="ok">
-                          <ion-label>OK</ion-label>
-                        </ion-segment-button>
-                        <ion-segment-button value="mal">
-                          <ion-label>Falla</ion-label>
-                        </ion-segment-button>
-                        <ion-segment-button value="na">
-                          <ion-label>N/A</ion-label>
-                        </ion-segment-button>
-                      </ion-segment>
-                      <ion-item class="item-observacion">
-                        <ion-label position="stacked">Observación</ion-label>
-                        <ion-input [(ngModel)]="resultados[item.id].observacion" placeholder="Opcional..."></ion-input>
-                      </ion-item>
+                      @switch (item.tipo_respuesta) {
+                        @case ('binario') {
+                          <ion-segment [(ngModel)]="resultados[item.id].valor" class="item-segment" (ionChange)="onItemChange($event)">
+                            <ion-segment-button value="ok" (click)="$event.stopPropagation()"><ion-label>OK</ion-label></ion-segment-button>
+                            <ion-segment-button value="mal" (click)="$event.stopPropagation()"><ion-label>Falla</ion-label></ion-segment-button>
+                            <ion-segment-button value="na" (click)="$event.stopPropagation()"><ion-label>N/A</ion-label></ion-segment-button>
+                          </ion-segment>
+                        }
+                        @case ('nivel') {
+                          <ion-segment [(ngModel)]="resultados[item.id].valor" class="item-segment" (ionChange)="onItemChange($event)">
+                            <ion-segment-button value="max" (click)="$event.stopPropagation()"><ion-label>Máx</ion-label></ion-segment-button>
+                            <ion-segment-button value="mitad" (click)="$event.stopPropagation()"><ion-label>Mitad</ion-label></ion-segment-button>
+                            <ion-segment-button value="bajo" (click)="$event.stopPropagation()"><ion-label>Bajo</ion-label></ion-segment-button>
+                            <ion-segment-button value="muy_bajo" (click)="$event.stopPropagation()"><ion-label>Muy bajo</ion-label></ion-segment-button>
+                            <ion-segment-button value="na" (click)="$event.stopPropagation()"><ion-label>N/A</ion-label></ion-segment-button>
+                          </ion-segment>
+                        }
+                        @case ('booleano') {
+                          <ion-segment [(ngModel)]="resultados[item.id].valor" class="item-segment" (ionChange)="onItemChange($event)">
+                            <ion-segment-button value="bueno" (click)="$event.stopPropagation()"><ion-label>Bueno</ion-label></ion-segment-button>
+                            <ion-segment-button value="malo" (click)="$event.stopPropagation()"><ion-label>Malo</ion-label></ion-segment-button>
+                            <ion-segment-button value="na" (click)="$event.stopPropagation()"><ion-label>N/A</ion-label></ion-segment-button>
+                          </ion-segment>
+                        }
+                        @default {
+                          <ion-segment [(ngModel)]="resultados[item.id].valor" class="item-segment" (ionChange)="onItemChange($event)">
+                            <ion-segment-button value="ok" (click)="$event.stopPropagation()"><ion-label>OK</ion-label></ion-segment-button>
+                            <ion-segment-button value="mal" (click)="$event.stopPropagation()"><ion-label>Falla</ion-label></ion-segment-button>
+                            <ion-segment-button value="na" (click)="$event.stopPropagation()"><ion-label>N/A</ion-label></ion-segment-button>
+                          </ion-segment>
+                        }
+                      }
+                      <div class="item-obs">
+                        <ion-input [(ngModel)]="resultados[item.id].observacion" placeholder="Observación (opcional)..."></ion-input>
+                      </div>
                     </div>
                   }
                 </div>
@@ -271,17 +318,17 @@
                     </ion-badge>
                   }
                 </div>
-                <ion-segment [(ngModel)]="tires[ll.key].estado" class="llanta-segment">
-                  <ion-segment-button value="ok">
+                <ion-segment [(ngModel)]="tires[ll.key].estado" class="llanta-segment" (ionChange)="onItemChange($event)">
+                  <ion-segment-button value="ok" (click)="$event.stopPropagation()">
                     <ion-label>OK</ion-label>
                   </ion-segment-button>
-                  <ion-segment-button value="regular">
+                  <ion-segment-button value="regular" (click)="$event.stopPropagation()">
                     <ion-label>Reg</ion-label>
                   </ion-segment-button>
-                  <ion-segment-button value="mal">
+                  <ion-segment-button value="mal" (click)="$event.stopPropagation()">
                     <ion-label>Falla</ion-label>
                   </ion-segment-button>
-                  <ion-segment-button value="na">
+                  <ion-segment-button value="na" (click)="$event.stopPropagation()">
                     <ion-label>N/A</ion-label>
                   </ion-segment-button>
                 </ion-segment>
@@ -372,20 +419,24 @@
 
     <!-- Errores de validación -->
     @if (getErroresValidacion().length > 0) {
-      <ion-card color="danger" class="errores-card">
-        <ion-card-content>
-          <div class="errores-header">
-            <ion-icon name="warning"></ion-icon>
-            <strong>Faltan los siguientes campos:</strong>
-          </div>
-          <ul class="errores-lista">
-            @for (error of getErroresValidacion(); track error) {
-              <li>{{ error }}</li>
-            }
-          </ul>
-        </ion-card-content>
-      </ion-card>
+      <div class="alerta-card">
+        <div class="alerta-header">
+          <ion-icon name="warning"></ion-icon>
+          <strong>Faltan los siguientes campos:</strong>
+        </div>
+        <ul class="alerta-lista">
+          @for (error of getErroresValidacion(); track error) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      </div>
     }
+
+    <!-- Botón volver a pendientes -->
+    <ion-button expand="block" fill="outline" color="medium" class="volver-btn" (click)="volverAPendientes()">
+      <ion-icon slot="start" name="arrow-back"></ion-icon>
+      Volver a Pendientes
+    </ion-button>
 
     <!-- Botón guardar -->
     <ion-button
@@ -398,5 +449,5 @@
       <ion-icon [slot]="'start'" name="save"></ion-icon>
       GUARDAR CHECKLIST
     </ion-button>
+    }
   }
-</ion-content>

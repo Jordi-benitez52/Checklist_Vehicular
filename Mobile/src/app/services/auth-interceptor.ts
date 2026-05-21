@@ -26,12 +26,18 @@ export class AuthInterceptor implements HttpInterceptor {
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.authService.getToken();
 
-    if (token) {
+    // No añadir token a endpoints de autenticación (login, verify-code, refresh, etc.)
+    const isAuthEndpoint = request.url.includes('/accounts/login') ||
+                           request.url.includes('/accounts/refresh') ||
+                           request.url.includes('/accounts/token');
+
+    if (token && !isAuthEndpoint) {
       request = this.addToken(request, token);
     }
 
     return next.handle(request).pipe(
       catchError(error => {
+        console.log('[AuthInterceptor] Request failed:', request.url, error.status, error.error);
         if (error.status === 401 && !request.url.includes('/accounts/refresh/')) {
           return this.handle401Error(request, next);
         }
@@ -61,6 +67,7 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    console.log('[AuthInterceptor] 401 error for URL:', request.url, '| refresh token exists:', !!this.authService.getRefreshToken());
     this.authService.logout();
     this.router.navigateByUrl('/login');
     return throwError(() => new Error('Session expired'));

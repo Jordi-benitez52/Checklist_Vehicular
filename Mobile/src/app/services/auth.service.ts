@@ -117,6 +117,31 @@ export class AuthService {
     );
   }
 
+  verify2FA(tempToken: string, code: string): Observable<any> {
+    return this.apiService.verifyCode(tempToken, code).pipe(
+      map(response => {
+        console.log('[AuthService] verify2FA response:', response);
+        this.saveToken(response.access);
+        if (response.refresh) {
+          this.saveRefreshToken(response.refresh);
+        }
+        if (response.user) {
+          this.saveUser(response.user);
+        }
+        console.log('[AuthService] Saved tokens, access:', !!this.getToken(), 'refresh:', !!this.getRefreshToken());
+        return response;
+      })
+    );
+  }
+
+  requestPasswordReset(email: string): Observable<any> {
+    return this.apiService.requestPasswordReset(email);
+  }
+
+  confirmPasswordReset(data: { email: string; code: string; new_password: string }): Observable<any> {
+    return this.apiService.confirmPasswordReset(data);
+  }
+
   logout(): void {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);

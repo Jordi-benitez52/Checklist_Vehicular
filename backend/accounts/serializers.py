@@ -1,11 +1,13 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import UserProfile
+import sys
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
+    photo = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
@@ -20,9 +22,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'is_active_user',
         ]
 
+    def get_photo(self, obj):
+        try:
+            if obj.photo:
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(obj.photo.url)
+                return f"http://localhost:8000{obj.photo.url}"
+            return None
+        except Exception as e:
+            print(f"[DEBUG] get_photo error: {e}", file=sys.stderr)
+            return None
+
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(write_only=True, required=False, allow_blank=True)
+    foto = serializers.ImageField(source='photo', required=False, allow_null=True)
+    email = serializers.EmailField(required=False)
 
     class Meta:
         model = UserProfile
@@ -30,22 +45,32 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             'full_name',
             'phone',
             'photo',
+            'foto',
             'email',
         ]
 
     def update(self, instance, validated_data):
-        email = validated_data.pop('email', None)
+        full_name = validated_data.get('full_name')
+        if full_name is not None:
+            instance.full_name = full_name
 
-        if email is not None:
+        phone = validated_data.get('phone')
+        if phone is not None:
+            instance.phone = phone
+
+        foto = validated_data.get('photo')
+        print(f"[DEBUG] UserProfileUpdateSerializer foto from validated_data: {foto}", file=sys.stderr)
+        if foto is not None:
+            print(f"[DEBUG] UserProfileUpdateSerializer setting instance.photo = foto", file=sys.stderr)
+            instance.photo = foto
+
+        email = validated_data.get('email')
+        if email is not None and email != instance.user.email:
             instance.user.email = email
-            instance.user.save()
-
-        instance.full_name = validated_data.get('full_name', instance.full_name)
-        instance.phone = validated_data.get('phone', instance.phone)
-        if 'photo' in validated_data:
-            instance.photo = validated_data.get('photo')
+            instance.user.save(update_fields=['email'])
 
         instance.save()
+        print(f"[DEBUG] UserProfileUpdateSerializer after save, instance.photo: {instance.photo}", file=sys.stderr)
         return instance
 
 
@@ -161,6 +186,7 @@ class UsuarioGuardiaUpdateSerializer(serializers.Serializer):
     new_password = serializers.CharField(write_only=True, min_length=8, required=False, allow_blank=True)
 
     def update(self, instance, validated_data):
+        print(f"[DEBUG] UsuarioGuardiaUpdateSerializer update called, validated_data: {list(validated_data.keys())}", file=sys.stderr)
         if 'username' in validated_data and validated_data['username'] != instance.username:
             if User.objects.filter(username=validated_data['username']).exclude(pk=instance.pk).exists():
                 raise serializers.ValidationError({'username': 'El nombre de usuario ya existe.'})
@@ -172,9 +198,14 @@ class UsuarioGuardiaUpdateSerializer(serializers.Serializer):
         if 'new_password' in validated_data and validated_data['new_password']:
             instance.set_password(validated_data['new_password'])
 
-        instance.save()
+        if 'is_active' in validated_data:
+            instance.is_active = validated_data['is_active']
+            print(f"[DEBUG] Setting instance.is_active = {instance.is_active}", file=sys.stderr)
 
-        profile = instance.profile
+        instance.save()
+        print(f"[DEBUG] instance.is_active after save: {instance.is_active}", file=sys.stderr)
+
+        profile, created = UserProfile.objects.get_or_create(user=instance)
         if 'full_name' in validated_data:
             profile.full_name = validated_data['full_name']
         if 'phone' in validated_data:

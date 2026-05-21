@@ -28,12 +28,56 @@ const ReportesPage = () => {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setExporting(true);
-    setTimeout(() => {
-      window.print();
+    try {
+      const response = await platformApi.get('/reportes/export/pdf/', {
+        responseType: 'blob',
+        params: {
+          fecha_inicio: fechaInicio,
+          fecha_fin: fechaFin,
+        }
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `reporte_lra_${new Date().toISOString().slice(0,10)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting PDF:', err);
+      setError('Error al exportar PDF');
+    } finally {
       setExporting(false);
-    }, 500);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      const response = await platformApi.get('/reportes/export/excel/', {
+        responseType: 'blob',
+        params: {
+          fecha_inicio: fechaInicio,
+          fecha_fin: fechaFin,
+        }
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `reporte_lra_${new Date().toISOString().slice(0,10)}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting Excel:', err);
+      setError('Error al exportar Excel');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const formatNumber = (num) => {
@@ -62,6 +106,10 @@ const ReportesPage = () => {
           <button className="btn btn-secondary" onClick={loadReportes}>
             <i className="bi bi-arrow-clockwise"></i>
             Actualizar
+          </button>
+          <button className="btn btn-warning" onClick={handleExportExcel} disabled={exporting}>
+            <i className="bi bi-file-excel"></i>
+            {exporting ? 'Generando...' : 'Exportar Excel'}
           </button>
           <button className="btn btn-primary" onClick={handleExportPDF} disabled={exporting}>
             <i className="bi bi-file-pdf"></i>

@@ -76,9 +76,15 @@
           <ion-input [(ngModel)]="formData.nombre_completo" placeholder="Ingresa tu nombre"></ion-input>
         </ion-item>
 
-        <ion-item class="ion-margin-bottom">
+        <ion-item class="ion-margin-bottom email-item" [class.email-locked]="!canUpdateEmail() && user?.last_email_update">
           <ion-label position="stacked">Correo electrónico</ion-label>
-          <ion-input [(ngModel)]="formData.email" type="email" placeholder="correo@ejemplo.com"></ion-input>
+          <ion-input [(ngModel)]="formData.email" [disabled]="!canUpdateEmail() && !!user?.last_email_update" type="email" placeholder="correo@ejemplo.com"></ion-input>
+          @if (!canUpdateEmail() && user?.last_email_update) {
+            <ion-badge slot="end" color="warning" class="field-lock-badge">
+              <ion-icon name="lock-closed"></ion-icon>
+              {{ getEmailTimeUntilUpdate() }}
+            </ion-badge>
+          }
         </ion-item>
 
         <ion-item class="ion-margin-bottom">

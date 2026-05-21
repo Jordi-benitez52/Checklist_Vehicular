@@ -1,10 +1,13 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar color="success">
     <ion-title>
       <ion-icon name="shield-checkmark" class="ion-margin-end"></ion-icon>
       Panel Guardia
     </ion-title>
     <ion-buttons slot="end">
+      <ion-button (click)="toggleDarkMode()">
+        <ion-icon [name]="isDarkMode ? 'sunny' : 'moon'"></ion-icon>
+      </ion-button>
       <ion-button (click)="logout()">
         <ion-icon name="log-out-outline"></ion-icon>
       </ion-button>
@@ -14,7 +17,6 @@
 
 <ion-content class="ion-padding">
   @if (user) {
-    <!-- Info del usuario -->
     <ion-card class="user-card">
       <ion-card-content>
         <ion-grid>
@@ -27,8 +29,8 @@
             <ion-col size="9">
               <h2 class="user-name">{{ user.full_name || user.username }}</h2>
               <p class="user-role">
-                <ion-badge [color]="user.role === 'admin' ? 'danger' : 'success'">
-                  {{ user.role === 'admin' ? 'Administrador' : 'Guardia' }}
+                <ion-badge color="success">
+                  Guardia
                 </ion-badge>
               </p>
               <p class="user-date">
@@ -42,7 +44,20 @@
     </ion-card>
   }
 
-  <!-- Turno activo -->
+  @if (!turnoActivo) {
+    <ion-card color="warning" class="turno-card">
+      <ion-card-content class="ion-text-center">
+        <ion-icon name="warning" style="font-size: 3rem;" class="ion-margin-bottom"></ion-icon>
+        <h3>Sin turno abierto</h3>
+        <p>Abre un turno para poder registrar accesos.</p>
+        <ion-button expand="block" color="primary" routerLink="/home">
+          <ion-icon slot="start" name="home"></ion-icon>
+          Abrir Turno
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  }
+
   @if (turnoActivo) {
     <ion-card color="success" class="turno-card">
       <ion-card-header>
@@ -79,55 +94,37 @@
         </ion-grid>
       </ion-card-content>
     </ion-card>
-  } @else {
-    <ion-card color="warning" class="turno-card">
+  }
+
+  @if (turnoActivo) {
+    <ion-card class="stats-card">
       <ion-card-content>
-        <ion-icon name="warning" class="ion-margin-end"></ion-icon>
-        No tienes un turno abierto.
-        <br>
-        <small>Abre un turno para poder registrar accesos.</small>
+        <ion-grid>
+          <ion-row class="ion-text-center">
+            <ion-col size="4" class="stat-col">
+              <ion-icon name="arrow-down-circle" class="stat-icon entrada"></ion-icon>
+              <div class="stat-number">{{ stats.entradas }}</div>
+              <div class="stat-label">Entradas</div>
+            </ion-col>
+            <ion-col size="4" class="stat-col">
+              <ion-icon name="arrow-up-circle" class="stat-icon salida"></ion-icon>
+              <div class="stat-number">{{ stats.salidas }}</div>
+              <div class="stat-label">Salidas</div>
+            </ion-col>
+            <ion-col size="4" class="stat-col">
+              <ion-icon name="clipboard-check" class="stat-icon checklist"></ion-icon>
+              <div class="stat-number">{{ stats.checklists }}</div>
+              <div class="stat-label">Checklists</div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
       </ion-card-content>
     </ion-card>
   }
 
-  <!-- Stats del turno -->
-  <ion-card class="stats-card">
-    <ion-card-header>
-      <ion-card-subtitle>Resumen del turno</ion-card-subtitle>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-grid>
-        <ion-row class="ion-text-center">
-          <ion-col size="4">
-            <div class="stat-box entrada" (click)="irEntrada()">
-              <ion-icon name="arrow-down-circle" class="stat-icon"></ion-icon>
-              <div class="stat-number">{{ stats.entradas }}</div>
-              <div class="stat-label">Entradas</div>
-            </div>
-          </ion-col>
-          <ion-col size="4">
-            <div class="stat-box salida" (click)="irSalida()">
-              <ion-icon name="arrow-up-circle" class="stat-icon"></ion-icon>
-              <div class="stat-number">{{ stats.salidas }}</div>
-              <div class="stat-label">Salidas</div>
-            </div>
-          </ion-col>
-          <ion-col size="4">
-            <div class="stat-box checklist" (click)="irChecklist()">
-              <ion-icon name="clipboard" class="stat-icon"></ion-icon>
-              <div class="stat-number">{{ stats.checklists }}</div>
-              <div class="stat-label">Checklists</div>
-            </div>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
-    </ion-card-content>
-  </ion-card>
-
-  <!-- Accesos rápidos -->
   <h5 class="section-title">
-    <ion-icon name="flash" class="ion-margin-end"></ion-icon>
-    Accesos Rápidos
+    <ion-icon name="car" class="ion-margin-end"></ion-icon>
+    Registro Vehicular
   </h5>
 
   <ion-card class="action-card entrada-card" (click)="irEntrada()">
@@ -168,15 +165,20 @@
     </ion-card-content>
   </ion-card>
 
+  <h5 class="section-title">
+    <ion-icon name="clipboard" class="ion-margin-end"></ion-icon>
+    Inspección
+  </h5>
+
   <ion-card class="action-card checklist-card" (click)="irChecklist()">
     <ion-card-content>
       <ion-grid class="ion-align-items-center">
         <ion-row>
           <ion-col size="2">
-            <ion-icon name="clipboard-check" class="action-icon text-primary"></ion-icon>
+            <ion-icon name="clipboard-check" class="action-icon text-success"></ion-icon>
           </ion-col>
           <ion-col size="8">
-            <ion-card-title class="text-primary">Checklist Tracto</ion-card-title>
+            <ion-card-title class="text-success">Checklist Tracto</ion-card-title>
             <ion-card-subtitle>Inspección de tractocamión</ion-card-subtitle>
           </ion-col>
           <ion-col size="2">
@@ -187,54 +189,30 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Menú adicional -->
   <h5 class="section-title">
-    <ion-icon name="menu" class="ion-margin-end"></ion-icon>
-    Más Opciones
+    <ion-icon name="person" class="ion-margin-end"></ion-icon>
+    Cuenta
   </h5>
 
-  <ion-list lines="none" class="menu-list">
-    <ion-item button (click)="irHistorial()">
-      <ion-icon name="time-outline" slot="start" color="primary"></ion-icon>
-      <ion-label>
-        <h3>Historial</h3>
-        <p>Ver movimientos del turno</p>
-      </ion-label>
-      <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
-    </ion-item>
+  <ion-card class="action-card perfil-card" (click)="irPerfil()">
+    <ion-card-content>
+      <ion-grid class="ion-align-items-center">
+        <ion-row>
+          <ion-col size="2">
+            <ion-icon name="person-circle" class="action-icon text-success"></ion-icon>
+          </ion-col>
+          <ion-col size="8">
+            <ion-card-title class="text-success">Mi Perfil</ion-card-title>
+            <ion-card-subtitle>Actualizar datos personales</ion-card-subtitle>
+          </ion-col>
+          <ion-col size="2">
+            <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
 
-    <ion-item button (click)="irVehiculosDentro()">
-      <ion-icon name="car-outline" slot="start" color="warning"></ion-icon>
-      <ion-label>
-        <h3>Vehículos Dentro</h3>
-        <p>Vehículos en la instalación</p>
-      </ion-label>
-      <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
-    </ion-item>
-
-    <ion-item button (click)="irPerfil()">
-      <ion-icon name="person-outline" slot="start" color="primary"></ion-icon>
-      <ion-label>
-        <h3>Mi Perfil</h3>
-        <p>Actualizar datos personales</p>
-      </ion-label>
-      <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
-    </ion-item>
-
-    <!-- Ocultar temporalmente hasta que exista la página de asignaciones -->
-    <!--
-    <ion-item button (click)="irAsignaciones()">
-      <ion-icon name="car-outline" slot="start" color="primary"></ion-icon>
-      <ion-label>
-        <h3>Mis Vehículos</h3>
-        <p>Vehículos asignados</p>
-      </ion-label>
-      <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
-    </ion-item>
-    -->
-  </ion-list>
-
-  <!-- Logout button -->
   <div class="ion-padding-top ion-text-center">
     <ion-button fill="outline" color="medium" (click)="logout()">
       <ion-icon name="log-out-outline" slot="start"></ion-icon>

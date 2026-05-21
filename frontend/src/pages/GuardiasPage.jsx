@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { usuariosService } from '../services/api';
 import './GuardiasPage.css';
 
@@ -10,9 +11,11 @@ const emptyFormData = {
   phone: '',
   role: 'guardia',
   numero_empleado: '',
+  is_active: true,
 };
 
 const GuardiasPage = () => {
+  const { showToast } = useOutletContext();
   const [guardias, setGuardias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -61,7 +64,7 @@ const GuardiasPage = () => {
 
     try {
       await usuariosService.create(formData);
-      setSuccess('Guardia creado correctamente');
+      showToast('Guardia creado correctamente');
       setShowModal(false);
       setFormData(emptyFormData);
       loadGuardias();
@@ -72,7 +75,7 @@ const GuardiasPage = () => {
         err.response?.data?.password?.[0] ||
         err.response?.data?.error ||
         'Error al crear guardia';
-      setError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -89,9 +92,10 @@ const GuardiasPage = () => {
       const updateData = { ...formData };
       if (!updateData.new_password) delete updateData.new_password;
       if (!updateData.email) delete updateData.email;
+      if (updateData.email === '') delete updateData.email;
 
-      await usuariosService.patch(selectedGuardia.id, updateData);
-      setSuccess('Guardia actualizado correctamente');
+      await usuariosService.update(selectedGuardia.id, updateData);
+      showToast('Guardia actualizado correctamente');
       setShowEditModal(false);
       setSelectedGuardia(null);
       setFormData(emptyFormData);
@@ -102,7 +106,7 @@ const GuardiasPage = () => {
         err.response?.data?.username?.[0] ||
         err.response?.data?.error ||
         'Error al actualizar guardia';
-      setError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -113,15 +117,16 @@ const GuardiasPage = () => {
     setError(null);
     setSubmitting(true);
 
-    try {
+try {
       await usuariosService.delete(selectedGuardia.id);
-      setSuccess('Guardia eliminado correctamente');
+      showToast('Usuario desactivado correctamente');
       setShowDeleteModal(false);
       setSelectedGuardia(null);
       loadGuardias();
     } catch (err) {
       console.error('Error deleting guardia:', err);
-      setError(err.response?.data?.error || 'Error al eliminar guardia');
+      const errorMsg = err.response?.data?.error || 'Error al desactivar usuario';
+      showToast(errorMsg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -136,6 +141,7 @@ const GuardiasPage = () => {
       phone: guardia.phone || '',
       role: guardia.role || 'guardia',
       numero_empleado: guardia.numero_empleado || '',
+      is_active: guardia.is_active !== undefined ? guardia.is_active : true,
       new_password: '',
     });
     setError(null);
@@ -176,7 +182,7 @@ const GuardiasPage = () => {
     <div className="guardias-page">
       <div className="page-header">
         <div>
-          <h2>Gestión de Guardias y Administradores</h2>
+          <h2>Gestión de Usuarios</h2>
           <p>Control de usuarios del sistema</p>
         </div>
 

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { AlertController, LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -20,6 +20,7 @@ export class ChecklistTractoPage implements OnInit, AfterViewInit {
   statsChecklist = 0;
 
   registroAccesoId: string = '';
+  registroSeleccionado: any = null;
   estatusGeneral: string = 'aprobado';
   observacionesGenerales: string = '';
 
@@ -53,7 +54,8 @@ export class ChecklistTractoPage implements OnInit, AfterViewInit {
     private apiService: ApiService,
     private authService: AuthService,
     private loadingController: LoadingController,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -196,24 +198,6 @@ export class ChecklistTractoPage implements OnInit, AfterViewInit {
     return this.tiresPositions.filter(ll => this.tires[ll.key]?.estado).length;
   }
 
-  getBadgeColor(estado: string): string {
-    switch (estado) {
-      case 'ok': return 'success';
-      case 'regular': return 'warning';
-      case 'mal': return 'danger';
-      default: return 'medium';
-    }
-  }
-
-  getBadgeLabel(estado: string): string {
-    switch (estado) {
-      case 'ok': return 'OK';
-      case 'regular': return 'Reg.';
-      case 'mal': return 'Falla';
-      default: return 'N/A';
-    }
-  }
-
   onEvidenciasSelected(event: any): void {
     const files = event?.target?.files;
     this.evidencias = files ? Array.from(files) : [];
@@ -248,7 +232,7 @@ export class ChecklistTractoPage implements OnInit, AfterViewInit {
       return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
     }
 
-    return { x: event.offsetX, y: event.offsetY };
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
   startDraw(event: any, tipo: 'operador' | 'vigilante'): void {
@@ -311,8 +295,46 @@ export class ChecklistTractoPage implements OnInit, AfterViewInit {
     return canvas.toDataURL('image/png');
   }
 
+  hasFirmaOperador(): boolean {
+    const firma = this.obtenerFirmaBase64('operador');
+    return firma.length > 100;
+  }
+
+  hasFirmaVigilante(): boolean {
+    const firma = this.obtenerFirmaBase64('vigilante');
+    return firma.length > 100;
+  }
+
+  getFirmasCompletadas(): number {
+    let count = 0;
+    if (this.hasFirmaOperador()) count++;
+    if (this.hasFirmaVigilante()) count++;
+    return count;
+  }
+
+  isFirmasCompleto(): boolean {
+    return this.getFirmasCompletadas() === 2;
+  }
+
   onSeccionChange(event: any): void {
     this.seccionActiva = event.detail.value;
+    if (this.seccionActiva === 'firmas') {
+      setTimeout(() => {
+        this.initCanvas('operador');
+        this.initCanvas('vigilante');
+      }, 100);
+    }
+  }
+
+  onAccordionGroupChange(event: any): void {
+    event.stopPropagation();
+  }
+
+  onItemChange(event?: any): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
   }
 
   irASiguienteSeccion(seccionActual: string): void {
@@ -327,6 +349,16 @@ export class ChecklistTractoPage implements OnInit, AfterViewInit {
     return !!this.registroAccesoId && !!this.estatusGeneral;
   }
 
+  isFormComplete(): boolean {
+    if (!this.registroAccesoId) return false;
+    if (!this.estatusGeneral) return false;
+    if (!this.hasFirmaOperador()) return false;
+    if (!this.hasFirmaVigilante()) return false;
+    const itemsSinCalificar = this.catalogoItems.filter(item => !this.resultados[item.id]?.valor);
+    if (itemsSinCalificar.length > 0) return false;
+    return true;
+  }
+
   getDatosCompletadas(): number {
     let count = 0;
     if (this.registroAccesoId) count++;
@@ -334,12 +366,31 @@ export class ChecklistTractoPage implements OnInit, AfterViewInit {
     return count;
   }
 
+  getItemsCompletados(): number {
+    return this.catalogoItems.filter(item => this.resultados[item.id]?.valor).length;
+  }
+
   isItemsCompleto(): boolean {
     return this.getItemsCompletados() === this.catalogoItems.length;
   }
 
-  getItemsCompletados(): number {
-    return this.catalogoItems.filter(item => this.resultados[item.id]?.valor).length;
+  getErroresValidacion(): string[] {
+    const errores: string[] = [];
+    if (!this.registroAccesoId) {
+      errores.push('Debes seleccionar un registro');
+    }
+    if (!this.estatusGeneral) {
+      errores.push('Debes seleccionar un estatus general');
+    }
+    const itemsSinCalificar = this.catalogoItems.filter(item => !this.resultados[item.id]?.valor);
+    if (itemsSinCalificar.length > 0) {
+      errores.push(`${itemsSinCalificar.length} items sin calificar`);
+    }
+    const tiresSinCalificar = this.tiresPositions.filter(ll => !this.tires[ll.key]?.estado);
+    if (tiresSinCalificar.length > 0) {
+      errores.push(`${tiresSinCalificar.length} llantas sin revisar`);
+    }
+    return errores;
   }
 
   isGrupoCompleto(seccion: string): boolean {
@@ -354,108 +405,162 @@ export class ChecklistTractoPage implements OnInit, AfterViewInit {
     return grupo.items.filter(item => this.resultados[item.id]?.valor).length;
   }
 
-  toggleGrupo(seccion: string): void {
-    this.gruposAbiertos[seccion] = !this.gruposAbiertos[seccion];
-  }
-
   isGrupoAbierto(seccion: string): boolean {
     return this.gruposAbiertos[seccion] === true;
   }
 
-  onItemChange(): void {
+  toggleGrupo(seccion: string): void {
+    this.gruposAbiertos[seccion] = !this.gruposAbiertos[seccion];
   }
 
-  getValorBadgeColor(valor: string): string {
+  getValorBadgeColor(valor: string, tipoRespuesta?: string): string {
     switch (valor) {
+      case 'ok':
+      case 'bueno':
+      case 'max':
+      case 'mitad':
+        return 'success';
+      case 'mal':
+      case 'malo':
+      case 'muy_bajo':
+      case 'bajo':
+        return 'danger';
+      case 'regular':
+      case 'na':
+        return 'medium';
+      default:
+        return 'medium';
+    }
+  }
+
+  getValorLabel(valor: string, tipoRespuesta?: string): string {
+    switch (valor) {
+      case 'ok':
+        return 'OK';
+      case 'mal':
+        return 'Falla';
+      case 'na':
+        return 'N/A';
+      case 'bueno':
+        return 'Bueno';
+      case 'malo':
+        return 'Malo';
+      case 'max':
+        return 'Máx';
+      case 'mitad':
+        return 'Mitad';
+      case 'bajo':
+        return 'Bajo';
+      case 'muy_bajo':
+        return 'Muy bajo';
+      default:
+        return '';
+    }
+  }
+
+  getSegmentOptions(tipoRespuesta: string): { value: string; label: string }[] {
+    switch (tipoRespuesta) {
+      case 'nivel':
+        return [
+          { value: 'max', label: 'Máx' },
+          { value: 'mitad', label: 'Mitad' },
+          { value: 'bajo', label: 'Bajo' },
+          { value: 'muy_bajo', label: 'Muy bajo' },
+          { value: 'na', label: 'N/A' },
+        ];
+      case 'booleano':
+        return [
+          { value: 'bueno', label: 'Bueno' },
+          { value: 'malo', label: 'Malo' },
+          { value: 'na', label: 'N/A' },
+        ];
+      case 'binario':
+      default:
+        return [
+          { value: 'ok', label: 'OK' },
+          { value: 'mal', label: 'Falla' },
+          { value: 'na', label: 'N/A' },
+        ];
+    }
+  }
+
+  getTipoRespuesta(item: any): string {
+    return item?.tipo_respuesta || 'binario';
+  }
+
+  getBadgeColor(estado: string): string {
+    switch (estado) {
       case 'ok': return 'success';
+      case 'regular': return 'warning';
       case 'mal': return 'danger';
       case 'na': return 'medium';
       default: return 'medium';
     }
   }
 
-  getValorLabel(valor: string): string {
-    switch (valor) {
+  getBadgeLabel(estado: string): string {
+    switch (estado) {
       case 'ok': return 'OK';
+      case 'regular': return 'Regular';
       case 'mal': return 'Falla';
       case 'na': return 'N/A';
       default: return '';
     }
   }
 
-  hasFirmaOperador(): boolean {
-    const firma = this.obtenerFirmaBase64('operador');
-    return firma && firma.length > 100;
-  }
-
-  hasFirmaVigilante(): boolean {
-    const firma = this.obtenerFirmaBase64('vigilante');
-    return firma && firma.length > 100;
-  }
-
-  isFirmasCompleto(): boolean {
-    return this.hasFirmaOperador() && this.hasFirmaVigilante();
-  }
-
-  getFirmasCompletadas(): number {
-    let count = 0;
-    if (this.hasFirmaOperador()) count++;
-    if (this.hasFirmaVigilante()) count++;
-    return count;
-  }
-
-  isFormComplete(): boolean {
-    return this.isDatosCompleto() &&
-           this.isItemsCompleto() &&
-           this.countLlantasCompletadas() === this.tiresPositions.length &&
-           this.isFirmasCompleto();
-  }
-
-  getProgresoTexto(): string {
-    const totalSecciones = 4;
-    let completadas = 0;
-    if (this.isDatosCompleto()) completadas++;
-    if (this.isItemsCompleto()) completadas++;
-    if (this.countLlantasCompletadas() === this.tiresPositions.length) completadas++;
-    if (this.isFirmasCompleto()) completadas++;
-
-    return `${completadas} de ${totalSecciones} secciones completas`;
-  }
-
-  getPendientesTexto(): string {
-    const errores = this.getErroresValidacion();
-    if (errores.length === 0) return 'Formulario completo, listo para guardar';
-    return errores.length + ' campo(s) pendiente(s)';
-  }
-
-  getErroresValidacion(): string[] {
-    const errores: string[] = [];
-
-    if (!this.registroAccesoId) {
-      errores.push('Seleccionar registro de acceso');
+  seleccionarPendiente(id: string): void {
+    const registro = this.registrosPendientes.find(r => r.id === id);
+    this.registroAccesoId = id;
+    this.registroSeleccionado = registro || null;
+    this.estatusGeneral = 'aprobado';
+    this.observacionesGenerales = '';
+    this.resultados = {};
+    this.tires = {};
+    for (const ll of this.tiresPositions) {
+      this.tires[ll.key] = { estado: '', observacion: '' };
     }
-    if (!this.estatusGeneral) {
-      errores.push('Seleccionar estatus general');
+    for (const item of this.catalogoItems) {
+      this.resultados[item.id] = { valor: '', observacion: '' };
     }
+    this.gruposAbiertos = {
+      'combustible': true,
+      'aceite': false,
+      'accesorios': false,
+      'ventanas': false,
+      'espejos': false,
+      'luces': false,
+      'habitaculo': false,
+      'motor_y_chasis': false,
+      'seguridad': false,
+      'luz_y_visibilidad': false,
+    };
+    this.seccionActiva = 'datos';
+    this.cdr.detectChanges();
+  }
 
-    const itemsSinValor = this.catalogoItems.filter(item => !this.resultados[item.id]?.valor);
-    if (itemsSinValor.length > 0) {
-      errores.push(`${itemsSinValor.length} item(s) de checklist sin revisar`);
+getEmpresaBadgeColor(empresa: string): string {
+    switch (empresa) {
+      case 'LRA': return 'success';
+      case 'PRO': return 'primary';
+      case 'CON': return 'warning';
+      default: return 'medium';
     }
+  }
 
-    const llantasSinEstado = this.tiresPositions.filter(ll => !this.tires[ll.key]?.estado);
-    if (llantasSinEstado.length > 0) {
-      errores.push(`${llantasSinEstado.length} llanta(s) sin revisar`);
+  volverAPendientes(): void {
+    this.registroAccesoId = '';
+    this.registroSeleccionado = null;
+    this.estatusGeneral = 'aprobado';
+    this.observacionesGenerales = '';
+    this.resultados = {};
+    this.tires = {};
+    for (const ll of this.tiresPositions) {
+      this.tires[ll.key] = { estado: '', observacion: '' };
     }
-
-    if (!this.hasFirmaOperador()) {
-      errores.push('Firma del operador pendiente');
-    }
-    if (!this.hasFirmaVigilante()) {
-      errores.push('Firma del vigilante pendiente');
-    }
-
-    return errores;
+    this.gruposAbiertos = {};
+    this.evidencias = [];
+    this.limpiarFirma('operador');
+    this.limpiarFirma('vigilante');
   }
 
   async guardarChecklist(): Promise<void> {
@@ -520,7 +625,7 @@ export class ChecklistTractoPage implements OnInit, AfterViewInit {
       next: async () => {
         await loading.dismiss();
         await this.alerta('Éxito', 'Checklist de tractocamión guardado correctamente.');
-        this.resetFormulario();
+        this.volverAPendientes();
         await this.cargarRegistrosPendientes();
         await this.cargarStatsChecklist();
       },

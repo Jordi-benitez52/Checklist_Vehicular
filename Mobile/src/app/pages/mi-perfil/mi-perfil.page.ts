@@ -29,7 +29,8 @@ export class MiPerfilPage implements OnInit {
     confirmar: ''
   };
 
-  private readonly PROFILE_UPDATE_INTERVAL = 15 * 60 * 1000;
+  private readonly EMAIL_UPDATE_INTERVAL = 15 * 24 * 60 * 60 * 1000; // 15 days in ms
+  private readonly PROFILE_UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutes for backwards compatibility
 
   constructor(
     private authService: AuthService,
@@ -109,8 +110,9 @@ export class MiPerfilPage implements OnInit {
   }
 
   async guardarPerfil(): Promise<void> {
-    if (!this.canUpdateProfile()) {
-      await this.mostrarAlerta('Espera', 'Debes esperar para poder actualizar tu perfil nuevamente.');
+    const emailChanged = this.formData.email !== this.user?.email;
+    if (emailChanged && !this.canUpdateEmail()) {
+      await this.mostrarAlerta('Espera', 'Solo puedes cambiar tu correo cada 15 días.');
       return;
     }
 
@@ -135,6 +137,7 @@ export class MiPerfilPage implements OnInit {
           nombre_completo: this.formData.nombre_completo,
           email: this.formData.email,
           foto: this.user?.foto,
+          last_email_update: emailChanged ? new Date().toISOString() : this.user?.last_email_update,
           last_profile_update: new Date().toISOString()
         };
 
@@ -158,6 +161,28 @@ export class MiPerfilPage implements OnInit {
         this.mostrarAlerta('Error', mensaje);
       }
     });
+  }
+
+  canUpdateEmail(): boolean {
+    if (!this.user?.last_email_update) return true;
+    const lastUpdate = new Date(this.user.last_email_update).getTime();
+    const timeSinceUpdate = Date.now() - lastUpdate;
+    return timeSinceUpdate >= this.EMAIL_UPDATE_INTERVAL;
+  }
+
+  getEmailTimeUntilUpdate(): string {
+    if (!this.user?.last_email_update) return '';
+    const lastUpdate = new Date(this.user.last_email_update).getTime();
+    const timeSinceUpdate = Date.now() - lastUpdate;
+    const remaining = this.EMAIL_UPDATE_INTERVAL - timeSinceUpdate;
+
+    if (remaining <= 0) return 'Disponible ahora';
+
+    const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+    const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+
+    if (days > 0) return `${days}d ${hours}h`;
+    return `${hours}h`;
   }
 
   canChangePassword(): boolean {

@@ -81,6 +81,128 @@
   }
 }
 
+.pendientes-container {
+  background: #059669;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+
+  .pendientes-header {
+    background: #047857;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+
+    .pendientes-icon {
+      font-size: 1.3rem;
+      color: white;
+      margin-right: 8px;
+    }
+
+    .pendientes-title {
+      flex: 1;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: white;
+      letter-spacing: 0.3px;
+    }
+
+    ion-badge {
+      font-size: 0.8rem;
+    }
+  }
+
+  .pendientes-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 8px;
+    background: #f3f4f6;
+  }
+
+  .pendiente-item {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 2px solid transparent;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &:active {
+      transform: scale(0.98);
+      border-color: #059669;
+    }
+
+    .pendiente-info {
+      .pendiente-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        &.principal {
+          margin-bottom: 6px;
+        }
+      }
+
+      .pendiente-icon {
+        font-size: 1.1rem;
+        color: #059669;
+        margin-right: 6px;
+      }
+
+      .pendiente-icon-small {
+        font-size: 0.85rem;
+        color: #9ca3af;
+        margin-right: 4px;
+      }
+
+      .pendiente-tracto {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #065f46;
+      }
+
+      .pendiente-empresa-badge {
+        margin-left: 8px;
+        font-size: 0.7rem;
+      }
+
+      .pendiente-empleado {
+        font-size: 0.9rem;
+        color: #374151;
+      }
+
+      .pendiente-hora {
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+
+      .pendiente-tipo-badge {
+        margin-left: 8px;
+        font-size: 0.65rem;
+      }
+    }
+
+    .pendiente-action {
+      margin-top: 8px;
+
+      ion-button {
+        --background: #059669;
+        --color: white;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
 .resumen-card {
   border-radius: 12px;
   margin-bottom: 16px;
@@ -197,7 +319,133 @@ ion-accordion {
   }
 
   .grupo-items {
-    padding-left: 8px;
+    padding: 12px;
+    background: white;
+    border-radius: 12px;
+    margin-top: 8px;
+
+    .item-card {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 2px solid #d1fae5;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      &.completado {
+        background: #ecfdf5;
+        border-color: #059669;
+      }
+
+      .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+
+        .item-nombre {
+          font-weight: 700;
+          font-size: 1rem;
+          color: #065f46;
+        }
+
+        .item-badge {
+          font-size: 0.7rem;
+        }
+      }
+
+      .item-segment {
+        margin-bottom: 12px;
+      }
+
+      .item-obs {
+        ion-input {
+          --background: white;
+          --color: #065f46;
+          --placeholder-color: #9ca3af;
+          --padding-start: 12px;
+          --padding-end: 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+}
+
+.registro-info-card {
+  background: #f0fdf4;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 2px solid #059669;
+
+  .info-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    ion-icon {
+      color: #059669;
+      margin-right: 8px;
+      font-size: 1.1rem;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #065f46;
+      margin-right: 4px;
+    }
+
+    .info-value {
+      color: #374151;
+    }
+  }
+}
+
+.alerta-card {
+  background: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 16px;
+
+  .alerta-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+
+    ion-icon {
+      color: #f59e0b;
+      margin-right: 8px;
+      font-size: 1.2rem;
+    }
+
+    strong {
+      color: #92400e;
+    }
+  }
+
+  .alerta-lista {
+    margin: 0;
+    padding-left: 28px;
+    color: #92400e;
+
+    li {
+      margin-bottom: 4px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
   }
 }
 
@@ -464,15 +712,17 @@ ion-accordion {
 }
 
 ion-segment {
-  background: #f3f4f6;
-  border-radius: 8px;
+  background: #d1fae5;
+  border-radius: 10px;
+  padding: 4px;
 
   ion-segment-button {
-    --indicator-color: var(--ion-color-primary);
-    --color: #6b7280;
+    --indicator-color: #059669;
+    --color: #065f46;
     --color-checked: white;
-    font-weight: 600;
-    font-size: 0.8rem;
-    min-height: 36px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    min-height: 40px;
+    border-radius: 8px;
   }
 }

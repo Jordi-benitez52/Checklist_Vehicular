@@ -136,12 +136,17 @@ class Vehiculo(models.Model):
         ('otro', 'Otro'),
     ]
 
+    EMPRESA_CHOICES = [
+        ('LRA', 'LRA'),
+        ('PRO', 'PRO'),
+        ('CON', 'CON'),
+    ]
+
     clave_interna = models.CharField(max_length=30, blank=True, null=True, unique=True)
     placa = models.CharField(max_length=20, unique=True)
     tipo_entidad = models.CharField(max_length=20, choices=TIPO_ENTIDAD_CHOICES)
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES)
-    propietario = models.CharField(max_length=150, blank=True)
-    empresa = models.CharField(max_length=150, blank=True)
+    empresa = models.CharField(max_length=20, choices=EMPRESA_CHOICES, blank=True)
     marca = models.CharField(max_length=80, blank=True)
     modelo = models.CharField(max_length=80, blank=True)
     color = models.CharField(max_length=40, blank=True)
@@ -171,7 +176,6 @@ class Vehiculo(models.Model):
     def save(self, *args, **kwargs):
         self.clave_interna = (self.clave_interna or '').strip().upper() or None
         self.placa = (self.placa or '').strip().upper()
-        self.propietario = (self.propietario or '').strip()
         self.empresa = (self.empresa or '').strip()
         self.marca = (self.marca or '').strip()
         self.modelo = (self.modelo or '').strip()
@@ -500,6 +504,11 @@ class ChecklistTracto(models.Model):
 
     firma_operador_data = models.TextField(blank=True, null=True)
     firma_vigilante_data = models.TextField(blank=True, null=True)
+    firma_supervisor_data = models.TextField(blank=True, null=True)
+
+    nombre_operador = models.CharField(max_length=120, blank=True, default='')
+    nombre_vigilante = models.CharField(max_length=120, blank=True, default='')
+    nombre_supervisor = models.CharField(max_length=120, blank=True, default='')
 
     class Meta:
         ordering = ['-fecha_hora', '-id']
@@ -525,7 +534,18 @@ class ChecklistTracto(models.Model):
 
 
 class ChecklistTractoItemCatalogo(models.Model):
+    TIPO_RESPUESTA_CHOICES = [
+        ('binario', 'OK / Falla / N/A'),
+        ('nivel', 'Nivel (Max/Mitad/Bajo/Muy bajo)'),
+        ('booleano', 'Bueno / Malo'),
+    ]
+
     SECCION_CHOICES = [
+        ('combustible', 'Combustible'),
+        ('habitaculo', 'Habitáculo'),
+        ('luz_y_visibilidad', 'Luz y Visibilidad'),
+        ('motor_y_chasis', 'Motor y Chasis'),
+        ('seguridad', 'Seguridad'),
         ('accesorios', 'Accesorios y herramientas'),
         ('apariencia', 'Apariencia general'),
         ('ventanas', 'Ventanas'),
@@ -536,7 +556,6 @@ class ChecklistTractoItemCatalogo(models.Model):
         ('fugas', 'Fugas'),
         ('frenos', 'Frenos'),
         ('loderas', 'Loderas'),
-        ('combustible', 'Sistema de combustible'),
         ('otros', 'Otros'),
     ]
 
@@ -545,6 +564,11 @@ class ChecklistTractoItemCatalogo(models.Model):
     nombre = models.CharField(max_length=150)
     orden = models.PositiveIntegerField(default=1)
     activo = models.BooleanField(default=True)
+    tipo_respuesta = models.CharField(
+        max_length=20,
+        choices=TIPO_RESPUESTA_CHOICES,
+        default='binario'
+    )
 
     class Meta:
         ordering = ['seccion', 'orden', 'id']
@@ -635,6 +659,15 @@ class ChecklistTractoLlanta(models.Model):
 
 
 class ChecklistTractoEvidencia(models.Model):
+    SECCION_CHOICES = [
+        ('accesorios', 'Accesorios'),
+        ('luces', 'Luces'),
+        ('motor', 'Motor'),
+        ('frenos', 'Frenos'),
+        ('llantas', 'Llantas'),
+        ('general', 'General'),
+    ]
+
     checklist = models.ForeignKey(
         ChecklistTracto,
         on_delete=models.CASCADE,
@@ -642,6 +675,7 @@ class ChecklistTractoEvidencia(models.Model):
     )
     imagen = models.ImageField(upload_to='checklists/tracto/')
     descripcion = models.CharField(max_length=200, blank=True)
+    seccion = models.CharField(max_length=50, choices=SECCION_CHOICES, default='general')
     uuid_evidencia = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     class Meta:

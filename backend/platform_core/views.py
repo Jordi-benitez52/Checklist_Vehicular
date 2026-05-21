@@ -533,13 +533,20 @@ class TurnoCreateAPIView(APIView):
             guardia_obj = request.user
 
         abierta_existente = Turno.objects.filter(
-            guardia=guardia_obj,
             abierto=True
         ).first()
 
         if abierta_existente:
             return Response(
-                {'error': f'Ya tienes un turno abierto: {abierta_existente.get_tipo_turno_display()} del {abierta_existente.fecha}. Ciérralo primero.'},
+                {
+                    'error': 'Ya existe un turno abierto. Debes cerrarlo antes de abrir otro.',
+                    'turno_actual': {
+                        'id': abierta_existente.id,
+                        'tipo_turno': abierta_existente.tipo_turno,
+                        'fecha': abierta_existente.fecha,
+                        'guardia': abierta_existente.guardia.username
+                    }
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -557,6 +564,8 @@ class TurnoCreateAPIView(APIView):
             return Response({'error': 'La fecha es requerida.'}, status=status.HTTP_400_BAD_REQUEST)
 
         turno_data['hora_apertura'] = timezone.now().isoformat()
+
+        Turno.objects.filter(abierto=True).update(abierto=False)
 
         serializer = TurnoSerializer(data=turno_data)
 
@@ -852,7 +861,7 @@ class RegistroAccesoCreateAPIView(APIView):
         empleado_id = data.get('empleado')
         visitante_id = data.get('visitante')
 
-        from platform_core.models import RegistroAcceso, Vehiculo, Conductor, Empleado
+        from .models import RegistroAcceso, Vehiculo, Conductor, Empleado
 
         if tipo_movimiento == 'entrada':
             if tipo_entidad == 'tracto' and vehiculo_id and conductor_id:
@@ -1349,7 +1358,16 @@ class RegistroAccesoCreateAPIView(APIView):
         )
 
         if serializer.is_valid():
-            registro = serializer.save(guardia=request.user)
+            try:
+                registro = serializer.save(guardia=request.user)
+            except Exception as e:
+                print(f"[ERROR] serializer.save() failed: {type(e).__name__}: {str(e)}", file=sys.stderr)
+                import traceback
+                traceback.print_exc(file=sys.stderr)
+                return Response(
+                    {'error': f'Error al guardar: {type(e).__name__}: {str(e)}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
             if evidencia_file:
                 registro.evidencia_fotografica = evidencia_file
@@ -2345,6 +2363,233 @@ class ReportesAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class ReportePDFAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter, landscape
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from io import BytesIO
+        from django.conf import settings
+        from datetime import datetime
+
+        fecha_inicio = request.GET.get('fecha_inicio')
+        fecha_fin = request.GET.get('fecha_fin')
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=landscape, topMargin=0.5*inch, bottomMargin=0.5*inch)
+
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            textColor=colors.HexColor('#059669'),
+            spaceAfter=20,
+        )
+
+        elements = []
+        elements.append(Paragraph('LRA - Reporte de Actividad', title_style))
+        elements.append(Spacer(1, 0.3*inch))
+
+        fecha_texto = f'Generado: {datetime.now().strftime("%d/%m/%Y %H:%M")}'
+        if fecha_inicio and fecha_fin:
+            fecha_texto += f' | Periodo: {fecha_inicio} al {fecha_fin}'
+        elements.append(Paragraph(fecha_texto, styles['Normal']))
+        elements.append(Spacer(1, 0.3*inch))
+
+        total_registros = RegistroAcceso.objects.count()
+        total_checklists = ChecklistTracto.objects.count()
+        total_turnos = Turno.objects.count()
+        total_vehiculos = Vehiculo.objects.count()
+        turnos_abiertos = Turno.objects.filter(abierto=True).count()
+
+        summary_data = [
+            ['Metric', 'Total'],
+            ['Total Registros', str(total_registros)],
+            ['Total Checklists Tracto', str(total_checklists)],
+            ['Total Turnos', str(total_turnos)],
+            ['Turnos Abiertos', str(turnos_abiertos)],
+            ['Total Vehículos', str(total_vehiculos)],
+        ]
+
+        summary_table = Table(summary_data, colWidths=[3*inch, 2*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8fafc')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#059669')),
+        ]))
+        elements.append(summary_table)
+        elements.append(Spacer(1, 0.3*inch))
+
+        tipo_data = [['Tipo Entidad', 'Total']]
+        for item in RegistroAcceso.objects.values('tipo_entidad').annotate(total=Count('id')).order_by('tipo_entidad'):
+            tipo_data.append([item['tipo_entidad'], str(item['total'])])
+        tipo_table = Table(tipo_data, colWidths=[3*inch, 2*inch])
+        tipo_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),
+        ]))
+        elements.append(Paragraph('Registros por Tipo', styles['Heading2']))
+        elements.append(tipo_table)
+        elements.append(Spacer(1, 0.3*inch))
+
+        checklist_data = [['Estatus', 'Total']]
+        for item in ChecklistTracto.objects.values('estatus_general').annotate(total=Count('id')).order_by('estatus_general'):
+            checklist_data.append([item['estatus_general'] or 'Sin estatus', str(item['total'])])
+        checklist_table = Table(checklist_data, colWidths=[3*inch, 2*inch])
+        checklist_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),
+        ]))
+        elements.append(Paragraph('Checklists por Estatus', styles['Heading2']))
+        elements.append(checklist_table)
+
+        doc.build(elements)
+
+        buffer.seek(0)
+        response = HttpResponse(buffer.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="reporte_lra_{datetime.now().strftime("%Y%m%d_%H%M")}.pdf"'
+        return response
+
+
+class ReporteExcelAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        from datetime import datetime
+
+        wb = Workbook()
+
+        header_fill = PatternFill(start_color='059669', end_color='059669', fill_type='solid')
+        header_font = Font(color='FFFFFF', bold=True, size=11)
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+
+        ws_summary = wb.active
+        ws_summary.title = 'Resumen'
+
+        ws_summary['A1'] = 'LRA - Reporte de Actividad'
+        ws_summary['A1'].font = Font(size=16, bold=True, color='059669')
+        ws_summary['A2'] = f'Generado: {datetime.now().strftime("%d/%m/%Y %H:%M")}'
+
+        ws_summary['A4'] = 'Métrica'
+        ws_summary['B4'] = 'Total'
+        ws_summary['A4'].fill = header_fill
+        ws_summary['B4'].fill = header_fill
+        ws_summary['A4'].font = header_font
+        ws_summary['B4'].font = header_font
+
+        summary_data = [
+            ('Total Registros', RegistroAcceso.objects.count()),
+            ('Total Checklists Tracto', ChecklistTracto.objects.count()),
+            ('Total Turnos', Turno.objects.count()),
+            ('Turnos Abiertos', Turno.objects.filter(abierto=True).count()),
+            ('Total Vehículos', Vehiculo.objects.count()),
+        ]
+
+        for i, (metric, value) in enumerate(summary_data, start=5):
+            ws_summary[f'A{i}'] = metric
+            ws_summary[f'B{i}'] = value
+
+        ws_summary.column_dimensions['A'].width = 25
+        ws_summary.column_dimensions['B'].width = 15
+
+        ws_registros = wb.create_sheet('Registros')
+        ws_registros['A1'] = 'Registros por Tipo'
+        ws_registros['A1'].font = Font(size=14, bold=True, color='059669')
+        ws_registros['A2'] = 'Tipo Entidad'
+        ws_registros['B2'] = 'Total'
+        ws_registros['A2'].fill = header_fill
+        ws_registros['B2'].fill = header_fill
+        ws_registros['A2'].font = header_font
+        ws_registros['B2'].font = header_font
+
+        row = 3
+        for item in RegistroAcceso.objects.values('tipo_entidad').annotate(total=Count('id')).order_by('tipo_entidad'):
+            ws_registros[f'A{row}'] = item['tipo_entidad']
+            ws_registros[f'B{row}'] = item['total']
+            row += 1
+
+        ws_registros.column_dimensions['A'].width = 20
+        ws_registros.column_dimensions['B'].width = 15
+
+        ws_checklists = wb.create_sheet('Checklists')
+        ws_checklists['A1'] = 'Checklists por Estatus'
+        ws_checklists['A1'].font = Font(size=14, bold=True, color='059669')
+        ws_checklists['A2'] = 'Estatus'
+        ws_checklists['B2'] = 'Total'
+        ws_checklists['A2'].fill = header_fill
+        ws_checklists['B2'].fill = header_fill
+        ws_checklists['A2'].font = header_font
+        ws_checklists['B2'].font = header_font
+
+        row = 3
+        for item in ChecklistTracto.objects.values('estatus_general').annotate(total=Count('id')).order_by('estatus_general'):
+            ws_checklists[f'A{row}'] = item['estatus_general'] or 'Sin estatus'
+            ws_checklists[f'B{row}'] = item['total']
+            row += 1
+
+        ws_checklists.column_dimensions['A'].width = 20
+        ws_checklists.column_dimensions['B'].width = 15
+
+        ws_vehiculos = wb.create_sheet('Vehículos')
+        ws_vehiculos['A1'] = 'Vehículos'
+        ws_vehiculos['A1'].font = Font(size=14, bold=True, color='059669')
+        headers_v = ['Placa', 'Tipo Entidad', 'Categoría', 'Marca', 'Modelo', 'Activo']
+        for col, header in enumerate(headers_v, start=1):
+            cell = ws_vehiculos.cell(row=2, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+
+        row = 3
+        for vehiculo in Vehiculo.objects.all()[:100]:
+            ws_vehiculos[f'A{row}'] = vehiculo.placa
+            ws_vehiculos[f'B{row}'] = vehiculo.tipo_entidad
+            ws_vehiculos[f'C{row}'] = vehiculo.categoria
+            ws_vehiculos[f'D{row}'] = vehiculo.marca
+            ws_vehiculos[f'E{row}'] = vehiculo.modelo
+            ws_vehiculos[f'F{row}'] = 'Sí' if vehiculo.activo else 'No'
+            row += 1
+
+        for col in range(1, 7):
+            ws_vehiculos.column_dimensions[get_column_letter(col)].width = 15
+
+        from django.http import HttpResponse
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="reporte_lra_{datetime.now().strftime("%Y%m%d_%H%M")}.xlsx"'
+
+        wb.save(response)
+        return response
+
+
 # =========================
 # WEB - LOGIN
 # =========================
@@ -2465,6 +2710,14 @@ def admin_dashboard_view(request):
         ).count(),
     }
 
+    usuarios_stats = {
+        'total': User.objects.count(),
+        'total_guardias': User.objects.filter(profile__role='guardia').count(),
+        'total_admins': User.objects.filter(profile__role='admin').count(),
+        'activos': User.objects.filter(is_active=True, profile__is_active_user=True).count(),
+        'inactivos': User.objects.filter(is_active=False).count(),
+    }
+
     context = {
         'user': request.user,
         'total_registros': total_registros,
@@ -2485,6 +2738,7 @@ def admin_dashboard_view(request):
         'fecha_fin': fecha_fin or '',
         'guardia_id': guardia_id or '',
         'turnos_stats': turnos_stats,
+        'usuarios_stats': usuarios_stats,
         'media_url': settings.MEDIA_URL,
     }
 
@@ -4075,6 +4329,24 @@ class AsignacionConductorVehiculoCreateAPIView(APIView):
 
         try:
             with transaction.atomic():
+                # Verificar si el vehículo ya tiene una asignación activa
+                asignacion_activa_vehiculo = AsignacionConductorVehiculo.objects.filter(
+                    vehiculo_id=vehiculo_id,
+                    activa=True
+                ).first()
+
+                if asignacion_activa_vehiculo:
+                    return Response(
+                        {
+                            'error': 'Este vehículo ya tiene una asignación activa.',
+                            'asignacion_actual': {
+                                'id': asignacion_activa_vehiculo.id,
+                                'conductor': asignacion_activa_vehiculo.conductor.nombre_completo
+                            }
+                        },
+                        status=400
+                    )
+
                 # Desasignar cualquier asignación activa anterior del conductor
                 AsignacionConductorVehiculo.objects.filter(
                     conductor_id=conductor_id,
@@ -4190,6 +4462,42 @@ class AsignacionEmpleadoVehiculoCreateAPIView(APIView):
 
         try:
             with transaction.atomic():
+                # Verificar si el empleado ya tiene una asignación activa (regla: 1 empleado = 1 vehículo)
+                asignacion_activa_empleado = AsignacionEmpleadoVehiculo.objects.filter(
+                    empleado_id=empleado_id,
+                    activa=True
+                ).first()
+
+                if asignacion_activa_empleado:
+                    return Response(
+                        {
+                            'error': 'Este empleado ya tiene un vehículo asignado.',
+                            'asignacion_actual': {
+                                'id': asignacion_activa_empleado.id,
+                                'vehiculo_placa': asignacion_activa_empleado.vehiculo.placa
+                            }
+                        },
+                        status=400
+                    )
+
+                # Verificar si el vehículo ya tiene una asignación activa
+                asignacion_activa_vehiculo = AsignacionEmpleadoVehiculo.objects.filter(
+                    vehiculo_id=vehiculo_id,
+                    activa=True
+                ).first()
+
+                if asignacion_activa_vehiculo:
+                    return Response(
+                        {
+                            'error': 'Este vehículo ya tiene una asignación activa.',
+                            'asignacion_actual': {
+                                'id': asignacion_activa_vehiculo.id,
+                                'empleado': asignacion_activa_vehiculo.empleado.nombre_completo
+                            }
+                        },
+                        status=400
+                    )
+
                 # Desasignar cualquier asignación activa anterior del empleado
                 AsignacionEmpleadoVehiculo.objects.filter(
                     empleado_id=empleado_id,

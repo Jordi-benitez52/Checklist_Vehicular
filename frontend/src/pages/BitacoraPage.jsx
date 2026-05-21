@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { auditoriaService } from '../services/api';
 import './BitacoraPage.css';
 
@@ -10,16 +10,50 @@ const BitacoraPage = () => {
   const [filtroModulo, setFiltroModulo] = useState('');
   const [filtroAccion, setFiltroAccion] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [countdown, setCountdown] = useState(30);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const countdownRef = useRef(null);
+  const LOAD_INTERVAL = 30000;
 
   useEffect(() => {
     loadBitacora();
-  }, []);
+    if (autoRefresh) {
+      startCountdown();
+    }
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [autoRefresh]);
+
+  const startCountdown = () => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setCountdown(30);
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          loadBitacora();
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const toggleAutoRefresh = () => {
+    if (autoRefresh) {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      setAutoRefresh(false);
+    } else {
+      setAutoRefresh(true);
+      startCountdown();
+    }
+  };
 
   const loadBitacora = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await auditoriaService.getBitacora();
+      const response = await auditoriaService.getAuditoria();
       setBitacora(response.data || []);
     } catch (err) {
       console.error('Error loading bitacora:', err);
@@ -32,7 +66,7 @@ const BitacoraPage = () => {
   const bitacoraFiltrada = bitacora.filter((b) => {
     const matchesSearch =
       b.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.usuario?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.usuario_username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       b.modulo?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesModulo = !filtroModulo || b.modulo === filtroModulo;
     const matchesAccion = !filtroAccion || b.accion === filtroAccion;
@@ -46,12 +80,12 @@ const BitacoraPage = () => {
       headers.join(','),
       ...bitacoraFiltrada.map((b) =>
         [
-          new Date(b.fecha).toLocaleString('es-MX'),
-          b.usuario?.username || '',
+          new Date(b.fecha_hora).toLocaleString('es-MX'),
+          b.usuario_username || '',
           b.modulo || '',
           b.accion || '',
           `"${(b.descripcion || '').replace(/"/g, '""')}"`,
-          `"${(b.detalle || '').replace(/"/g, '""')}"`,
+          `"${(b.entidad_tipo || '').replace(/"/g, '""')}"`,
         ].join(',')
       ),
     ].join('\n');
@@ -129,6 +163,14 @@ const BitacoraPage = () => {
             <i className="bi bi-arrow-clockwise"></i>
             Actualizar
           </button>
+          <button
+            className={`btn ${autoRefresh ? 'btn-success' : 'btn-outline-success'}`}
+            onClick={toggleAutoRefresh}
+            title={autoRefresh ? `Auto-actualización activa (próxima en ${countdown}s)` : 'Auto-actualización desactivada'}
+          >
+            <i className={`bi ${autoRefresh ? 'bi-hourglass-split' : 'bi-toggle-off'}`}></i>
+            {autoRefresh ? `Auto: ${countdown}s` : 'Auto: Off'}
+          </button>
           <button className="btn btn-success" onClick={handleExportCSV} disabled={exporting}>
             <i className="bi bi-file-excel"></i>
             Exportar CSV
@@ -195,14 +237,14 @@ const BitacoraPage = () => {
           <tbody>
             {bitacoraFiltrada.map((item) => (
               <tr key={item.id}>
-                <td>{formatDateTime(item.fecha)}</td>
+                <td>{formatDateTime(item.fecha_hora)}</td>
                 <td>
-                  <strong>{item.usuario?.username || '-'}</strong>
+                  <strong>{item.usuario_username || '-'}</strong>
                 </td>
                 <td>{item.modulo || '-'}</td>
                 <td>
                   <span className={`badge ${getAccionBadge(item.accion)}`}>
-                    {item.accion}
+                    {item.accion_display || item.accion || '-'}
                   </span>
                 </td>
                 <td>{item.descripcion || '-'}</td>

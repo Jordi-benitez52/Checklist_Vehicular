@@ -44,40 +44,92 @@
   border-bottom: 2px solid #e5e7eb;
 }
 
-.checklist-items-grid {
+.checklist-items-section {
+  margin-bottom: 1rem;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
 }
 
-.item-row {
-  display: grid;
-  grid-template-columns: 1fr 80px 2fr;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
+.checklist-items-section-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  cursor: pointer;
+  user-select: none;
 }
 
-.item-row:last-child {
+.checklist-items-section-header:hover {
+  background: #e5e7eb;
+}
+
+.checklist-items-section-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checklist-items-section-count {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.checklist-items-section-chevron {
+  transition: transform 0.2s;
+  color: #6b7280;
+}
+
+.checklist-items-section-chevron.open {
+  transform: rotate(180deg);
+}
+
+.checklist-items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.checklist-items-table th {
+  background: #f9fafb;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.checklist-items-table th:nth-child(2),
+.checklist-items-table th:nth-child(3) {
+  text-align: center;
+  width: 100px;
+}
+
+.checklist-items-table td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.85rem;
+}
+
+.checklist-items-table tr:last-child td {
   border-bottom: none;
 }
 
-.item-row.header {
-  background: #f9fafb;
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: #6b7280;
+.checklist-items-table tr:hover {
+  background: #fafafa;
 }
 
-.item-nombre {
+.item-nombre-cell {
   font-weight: 500;
-}
-
-.item-obs {
-  color: #6b7280;
-  font-size: 0.9rem;
+  color: #111827;
 }
 
 .item-status {
@@ -88,12 +140,13 @@
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
-  min-width: 50px;
+  min-width: 60px;
+  text-align: center;
 }
 
 .item-ok {
   background: #dcfce7;
-  color: #166534;
+  color: #059669;
 }
 
 .item-mal {
@@ -106,12 +159,47 @@
   color: #6b7280;
 }
 
+.item-regular {
+  background: #fef3c7;
+  color: #f97316;
+}
+
+.item-obs-cell {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.8rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .observaciones {
   padding: 1rem;
   background: #fef9c3;
   border-radius: 8px;
-  border-left: 4px solid #eab308;
+  border-left: 4px solid #f97316;
   color: #854d0e;
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-secondary {
+  background: #e5e7eb;
+  color: #6b7280;
 }
 
 .modal-overlay {
@@ -131,14 +219,14 @@
   background: white;
   border-radius: 12px;
   width: 100%;
-  max-width: 700px;
+  max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .modal-lg {
-  max-width: 800px;
+  max-width: 900px;
 }
 
 .modal-header {
@@ -204,24 +292,119 @@
   font-size: 1.25rem;
 }
 
-.badge-success {
-  background: #dcfce7;
-  color: #166534;
+.firmas-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
-.badge-danger {
-  background: #fef2f2;
-  color: #dc2626;
+.firma-item {
+  text-align: center;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
-.badge-warning {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.badge-secondary {
-  background: #e5e7eb;
+.firma-label {
+  font-size: 0.8rem;
   color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.firma-img {
+  max-width: 150px;
+  max-height: 80px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: white;
+}
+
+.firma-nombre {
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.llantas-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.llanta-item {
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.llanta-posicion {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #374151;
+}
+
+.llanta-estado {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.evidencias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.evidencia-item {
+  text-align: center;
+}
+
+.evidencia-item img {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.evidencia-desc {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.page-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #6b7280;
+}
+
+.spinner-large {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {
@@ -230,12 +413,60 @@
     margin: 1rem;
   }
 
-  .item-row {
-    grid-template-columns: 1fr 60px 1fr;
-    font-size: 0.85rem;
-  }
-
   .checklist-meta {
     grid-template-columns: 1fr;
+  }
+
+  .llantas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .firmas-section {
+    grid-template-columns: 1fr;
+  }
+
+  .checklist-items-table th:nth-child(3),
+  .checklist-items-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .modal-overlay,
+  .modal-overlay * {
+    visibility: visible;
+  }
+
+  .modal-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white;
+  }
+
+  .modal {
+    box-shadow: none;
+    max-width: 100%;
+    max-height: none;
+    width: 100%;
+  }
+
+  .modal-header {
+    position: relative;
+    background: white;
+  }
+
+  .modal-body {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .modal-footer {
+    display: none;
   }
 }

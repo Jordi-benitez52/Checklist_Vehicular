@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from 'src/app/services/api.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
@@ -13,22 +14,46 @@ export class HistorialPage implements OnInit {
   movimientos: any[] = [];
   checklists: any[] = [];
   filtroActivo: string = '';
+  turnoActual: any = null;
+  user: any = null;
 
   constructor(
     private apiService: ApiService,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit() {
+    this.user = this.authService.getUser();
     this.route.queryParams.subscribe(params => {
       this.cargarDatos(params);
     });
   }
 
   ionViewWillEnter() {
+    this.user = this.authService.getUser();
+    this.cargarTurnoActivo();
     this.route.queryParams.subscribe(params => {
       this.cargarDatos(params);
+    });
+  }
+
+  async cargarTurnoActivo(): Promise<void> {
+    const guardiaId = this.user?.id;
+    if (!guardiaId) return;
+
+    return new Promise((resolve) => {
+      this.apiService.getTurnos(true, guardiaId).subscribe({
+        next: (turnos) => {
+          this.turnoActual = turnos && turnos.length > 0 ? turnos[0] : null;
+          resolve();
+        },
+        error: () => {
+          this.turnoActual = null;
+          resolve();
+        }
+      });
     });
   }
 
@@ -40,8 +65,9 @@ export class HistorialPage implements OnInit {
     const movimientoParams: any = {};
     if (vehiculoId) movimientoParams['vehiculo'] = vehiculoId;
     if (visitanteId) movimientoParams['visitante'] = visitanteId;
+    if (this.turnoActual?.id) movimientoParams['turno'] = this.turnoActual.id;
 
-    this.apiService.getMovimientosRecientes().subscribe({
+    this.apiService.getRegistrosAcceso(movimientoParams).subscribe({
       next: (data) => {
         this.movimientos = data;
       },
@@ -50,7 +76,10 @@ export class HistorialPage implements OnInit {
       }
     });
 
-    this.apiService.getChecklistsRecientes().subscribe({
+    const checklistParams: any = {};
+    if (this.turnoActual?.id) checklistParams['turno'] = this.turnoActual.id;
+
+    this.apiService.getChecklistsRecientes(checklistParams).subscribe({
       next: (data) => {
         this.checklists = data;
       },

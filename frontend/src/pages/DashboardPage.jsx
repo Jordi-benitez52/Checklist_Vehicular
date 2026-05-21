@@ -50,8 +50,11 @@ const DashboardPage = () => {
       setLoading(true);
       setError(null);
 
-      const [turnosRes] = await Promise.all([
+      const [turnosRes, vehiculosRes, checklistsRes, registrosRes] = await Promise.all([
         turnosService.getAll().catch(() => ({ data: [] })),
+        vehiculosService.getAll().catch(() => ({ data: [] })),
+        checklistsService.getAll().catch(() => ({ data: [] })),
+        registrosService.getAll().catch(() => ({ data: [] })),
       ]);
 
       const turnosAbiertos = (turnosRes.data || []).filter((t) => t.abierto)?.length || 0;
@@ -62,11 +65,15 @@ const DashboardPage = () => {
         return fechaCierre.toDateString() === hoy.toDateString();
       })?.length || 0;
 
+      const vehiculosActivos = (vehiculosRes.data || []).filter((v) => v.activo)?.length || 0;
+      const checklistsTotal = (checklistsRes.data || []).length || 0;
+      const registrosTotal = (registrosRes.data || []).length || 0;
+
       setStats({
-        totalRegistros: 0,
+        totalRegistros: registrosTotal,
         turnosAbiertos,
-        totalVehiculos: 0,
-        totalChecklists: 0,
+        totalVehiculos: vehiculosActivos,
+        totalChecklists: checklistsTotal,
       });
 
       setTurnosStats({
@@ -75,7 +82,8 @@ const DashboardPage = () => {
         total: (turnosRes.data || []).length,
       });
 
-      setRecentActivity([]);
+      const recent = (registrosRes.data || []).slice(0, 10);
+      setRecentActivity(recent);
     } catch (err) {
       console.error('Error loading dashboard:', err);
       setError('Error al cargar datos del dashboard');
@@ -109,7 +117,7 @@ const DashboardPage = () => {
     <div className="dashboard">
       <div className="welcome-banner">
         <h2>Bienvenido, {user?.username}</h2>
-        <p>Resumen de actividad del sistema</p>
+        <p>Resumen de usuarios en la plataforma</p>
       </div>
 
       <div className="stats-grid">
@@ -178,11 +186,32 @@ const DashboardPage = () => {
           <Link to="/registros" className="btn-link">Ver todos</Link>
         </div>
 
-        <div className="empty-state">
-          <i className="bi bi-inbox"></i>
-          <p>No hay accesos registrados</p>
-          <small>Los registros aparecerán cuando se realicen entradas y salidas</small>
-        </div>
+        {recentActivity.length === 0 ? (
+          <div className="empty-state">
+            <i className="bi bi-inbox"></i>
+            <p>No hay accesos registrados</p>
+            <small>Los registros aparecerán cuando se realicen entradas y salidas</small>
+          </div>
+        ) : (
+          <div className="activity-list">
+            {recentActivity.map((reg) => (
+              <div key={reg.id} className="activity-item">
+                <div className="activity-icon">
+                  <i className={reg.tipo_movimiento === 'entrada' ? 'bi bi-arrow-right-square' : 'bi bi-arrow-left-square'}></i>
+                </div>
+                <div className="activity-info">
+                  <span className="activity-type">{reg.tipo_entidad_display || reg.tipo_entidad}</span>
+                  <span className="activity-vehiculo">
+                    {reg.vehiculo_info?.placa || reg.vehiculo_info?.clave_interna || 'Sin vehículo'}
+                  </span>
+                </div>
+                <div className="activity-time">
+                  {new Date(reg.fecha_hora).toLocaleString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

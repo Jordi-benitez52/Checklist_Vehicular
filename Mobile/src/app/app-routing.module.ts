@@ -15,6 +15,11 @@ const routes: Routes = [
       import('./pages/login/login.module').then(m => m.LoginPageModule)
   },
   {
+    path: 'reset-password',
+    loadChildren: () =>
+      import('./pages/reset-password/reset-password.module').then(m => m.ResetPasswordPageModule)
+  },
+  {
     path: 'home',
     loadChildren: () =>
       import('./home/home.module').then(m => m.HomePageModule),
@@ -56,7 +61,8 @@ const routes: Routes = [
     path: 'historial',
     loadChildren: () =>
       import('./pages/historial/historial.module').then(m => m.HistorialPageModule),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard, RoleGuard],
+    data: { role: 'admin' }
   },
   {
     path: 'mi-perfil',

@@ -1,5 +1,5 @@
 .user-card {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #059669, #047857);
   color: white;
   border-radius: 16px;
   margin-bottom: 16px;
@@ -78,14 +78,46 @@
 .stats-card {
   border-radius: 16px;
   margin-bottom: 16px;
+  background: white;
 
-  ion-card-header {
-    padding-bottom: 0;
+  ion-card-content {
+    padding: 16px;
   }
 
   ion-card-subtitle {
     font-size: 0.85rem;
     color: #6b7280;
+  }
+
+  .stat-col {
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .stat-icon {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+
+      &.entrada { color: #059669; }
+      &.salida { color: #f97316; }
+      &.checklist { color: #059669; }
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
   }
 }
 
@@ -124,15 +156,15 @@
   }
 
   &.salida {
-    background: rgba(245, 158, 11, 0.1);
-    .stat-icon { color: #f59e0b; }
-    .stat-number { color: #f59e0b; }
+    background: rgba(249, 115, 22, 0.1);
+    .stat-icon { color: #f97316; }
+    .stat-number { color: #f97316; }
   }
 
   &.checklist {
-    background: rgba(37, 99, 235, 0.1);
-    .stat-icon { color: #2563eb; }
-    .stat-number { color: #2563eb; }
+    background: rgba(5, 150, 105, 0.1);
+    .stat-icon { color: #059669; }
+    .stat-number { color: #059669; }
   }
 }
 
@@ -143,7 +175,7 @@
   padding-left: 4px;
 
   ion-icon {
-    color: #2563eb;
+    color: #059669;
   }
 }
 
@@ -152,6 +184,7 @@
   margin-bottom: 12px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: white;
 
   &:hover {
     transform: translateY(-2px);
@@ -183,14 +216,17 @@
 
   &.entrada-card {
     border-left: 4px solid #059669;
+    .text-success { color: #059669 !important; }
   }
 
   &.salida-card {
-    border-left: 4px solid #f59e0b;
+    border-left: 4px solid #f97316;
+    .text-warning { color: #f97316 !important; }
   }
 
   &.checklist-card {
-    border-left: 4px solid #2563eb;
+    border-left: 4px solid #059669;
+    .text-primary { color: #059669 !important; }
   }
 }
 
@@ -223,4 +259,28 @@
       margin: 0;
     }
   }
+}
+
+ion-content {
+  --background: #f8fafc;
+}
+
+ion-header ion-toolbar {
+  --background: #059669;
+  --color: white;
+}
+
+ion-badge[color="success"] {
+  background: rgba(5, 150, 105, 0.15);
+  color: #059669;
+}
+
+ion-badge[color="danger"] {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+}
+
+ion-button[fill="outline"][color="medium"] {
+  --color: #6b7280;
+  --border-color: #e5e7eb;
 }

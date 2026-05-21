@@ -4,7 +4,7 @@
   align-items: center;
   padding: 1.5rem 2rem;
   background: white;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 3px solid #059669;
   margin-left: 250px;
 }
 
@@ -12,7 +12,7 @@
   margin: 0;
   font-size: 1.75rem;
   font-weight: 700;
-  color: #111827;
+  color: #059669;
 }
 
 .header-actions {
@@ -32,7 +32,7 @@
 
 .user-badge i {
   font-size: 1.5rem;
-  color: #6b7280;
+  color: #059669;
 }
 
 .user-badge span {
@@ -41,7 +41,7 @@
 }
 
 .role-badge {
-  background: #2563eb;
+  background: #059669;
   color: white !important;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -54,7 +54,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #dc2626;
+  background: #f97316;
   color: white;
   border: none;
   border-radius: 8px;
@@ -64,7 +64,7 @@
 }
 
 .btn-logout:hover {
-  background: #b91c1c;
+  background: #ea580c;
 }
 
 .btn-logout i {
