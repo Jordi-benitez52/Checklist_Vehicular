@@ -9,7 +9,7 @@ const IS_NGROK = API_HOST.includes('ngrok-free.app') || API_HOST.includes('ngrok
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const PLATFORM_API_BASE_URL = VITE_API_URL
-  ? `${VITE_API_URL}/platform`
+  ? `${VITE_API_URL}/api/platform`
   : IS_RAILWAY
   ? `${window.location.protocol}//${API_HOST}/api/platform`
   : IS_NGROK
@@ -17,7 +17,7 @@ const PLATFORM_API_BASE_URL = VITE_API_URL
   : `http://${API_HOST}:${API_PORT}/api/platform`;
 
 const ACCOUNTS_API_BASE_URL = VITE_API_URL
-  ? `${VITE_API_URL}/accounts`
+  ? `${VITE_API_URL}/api/accounts`
   : IS_RAILWAY
   ? `${window.location.protocol}//${API_HOST}/api/accounts`
   : IS_NGROK
@@ -27,7 +27,7 @@ const ACCOUNTS_API_BASE_URL = VITE_API_URL
 const createApiInstance = (baseURL) => {
   const instance = axios.create({
     baseURL,
-    withCredentials: false,
+    withCredentials: true,
   });
 
   instance.interceptors.request.use(
