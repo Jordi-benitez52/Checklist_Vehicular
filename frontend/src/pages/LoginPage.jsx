@@ -128,12 +128,26 @@ try {
         setCountdown(300);
         startCountdown();
       } else if (data.access) {
-        const result = await login(username, password);
-        if (result.success) {
-          navigate('/');
-        } else {
-          setLoginError(result.error || 'Error al iniciar sesión');
-        }
+        const userData = {
+          id: data.user.id,
+          username: data.user.username,
+          email: data.user.email,
+          role: data.user.role,
+          full_name: data.user.full_name,
+          phone: data.user.phone,
+          photo: data.user.photo,
+        };
+
+        console.log('Login success, userData:', userData);
+        console.log('Access token:', data.access ? 'present' : 'missing');
+        console.log('Refresh token:', data.refresh ? 'present' : 'missing');
+
+        localStorage.setItem('token', data.access);
+        localStorage.setItem('refreshToken', data.refresh);
+        localStorage.setItem('user', JSON.stringify(userData));
+
+        login(userData);
+        navigate('/');
       }
     } catch (err) {
       console.error('Login error:', err);

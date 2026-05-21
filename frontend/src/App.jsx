@@ -31,9 +31,11 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
+    console.log('No user found, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
+  console.log('User authenticated:', user);
   return children;
 };
 
