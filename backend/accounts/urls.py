@@ -15,6 +15,7 @@ from .views import (
     Disable2FA,
     LogoutAPIView,
     GoogleOAuthCallbackView,
+    CreateTestUserView,
 )
 
 urlpatterns = [
@@ -33,4 +34,5 @@ urlpatterns = [
     path('password-reset/', PasswordResetRequestView.as_view(), name='accounts-password-reset'),
     path('password-reset/confirm/', PasswordResetConfirmView.as_view(), name='accounts-password-reset-confirm'),
     path('google/callback/', GoogleOAuthCallbackView.as_view(), name='google-oauth-callback'),
+    path('crear-test-user/', CreateTestUserView.as_view(), name='crear-test-user'),
 ]

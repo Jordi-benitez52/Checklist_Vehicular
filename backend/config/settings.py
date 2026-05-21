@@ -10,16 +10,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-cambiar-esto-en-produccion')
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '192.168.0.248',
-    '.railway.app',
-    '.up.railway.app',
-    'checklistvehicular-production.up.railway.app',
-    'localhost:5173',
-    'localhost:8000',
-]
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,.railway.app,.up.railway.app,checklistvehicular-production.up.railway.app').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -78,6 +69,13 @@ CORS_ALLOWED_ORIGINS = [
     'https://*.up.railway.app',
     'https://checklist-vehicular-git-main-jordi-rodriguez-s-projects.vercel.app',
 ]
+
+# Allow all origins for mobile app testing (can be overridden via env var)
+if os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'false').lower() in ('true', '1', 'yes'):
+    CORS_ALLOWED_ORIGINS = ['*']
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

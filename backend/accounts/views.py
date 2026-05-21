@@ -149,33 +149,20 @@ class LoginAPIView(APIView):
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
-        # TEMPORARY: Skip 2FA for testing - return tokens directly
-        refresh = RefreshToken.for_user(user)
+        # Generate temp token for 2FA verification
+        from rest_framework_simplejwt.tokens import RefreshToken
+        temp_token = RefreshToken.for_user(user)
+        temp_token['temp'] = True
+        temp_token['user_id'] = user.id
 
-        # Try to send login notification in background (non-blocking)
-        try:
-            import threading
-            def send_notification():
-                try:
-                    send_login_notification(profile, request)
-                except Exception as e:
-                    print(f'Login notification error: {e}')
-            threading.Thread(target=send_notification, daemon=True).start()
-        except Exception:
-            pass
+        # Send verification code via email
+        send_verification_code_email(profile)
 
         return Response({
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'role': profile.role,
-                'full_name': profile.full_name,
-                'phone': profile.phone,
-                'photo': profile.photo.url if profile.photo else None,
-            }
+            'requires_verification': True,
+            'temp_token': str(temp_token),
+            'message': 'Se ha enviado un código de verificación a tu email.',
+            'expires_in': 300
         }, status=status.HTTP_200_OK)
 
 
@@ -1299,3 +1286,44 @@ class GoogleOAuthCallbackView(APIView):
             'message': 'Se ha enviado un codigo de verificacion a tu email.',
             'expires_in': 300
         }, status=status.HTTP_200_OK)
+
+
+class CreateTestUserView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        from django.contrib.auth.models import User
+        from .models import UserProfile
+
+        username = request.data.get('username', 'guardia1')
+        email = request.data.get('email', 'guardia1@test.com')
+        password = request.data.get('password', 'Test123!')
+        full_name = request.data.get('full_name', 'Guardia Uno')
+        rol = request.data.get('rol', 'guardia')
+
+        if User.objects.filter(username=username).exists():
+            return Response({'message': 'El usuario ya existe', 'username': username}, status=status.HTTP_200_OK)
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
+
+        profile = UserProfile.objects.create(
+            user=user,
+            full_name=full_name,
+            rol=rol,
+            is_active=True
+        )
+
+        return Response({
+            'message': 'Usuario creado exitosamente',
+            'user': {
+                'id': user.id,
+                'username': username,
+                'email': email,
+                'full_name': full_name,
+                'rol': rol
+            }
+        }, status=status.HTTP_201_CREATED)
