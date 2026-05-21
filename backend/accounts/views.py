@@ -1313,7 +1313,7 @@ class CreateTestUserView(APIView):
         profile = UserProfile.objects.create(
             user=user,
             full_name=full_name,
-            rol=rol,
+            role=rol,
             is_active=True
         )
 
