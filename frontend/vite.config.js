@@ -14,6 +14,7 @@ export default defineConfig({
     allowedHosts: [
       'df29-2806-250-430-cab1-00-1cf6.ngrok-free.app',
       '3fe9-2806-250-430-cab1-00-1cf6.ngrok-free.app',
+      'checklist-vehicular-git-main-jordi-rodriguez-s-projects.vercel.app',
       'localhost',
       '127.0.0.1',
     ],
