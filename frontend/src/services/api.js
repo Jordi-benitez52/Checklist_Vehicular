@@ -6,13 +6,19 @@ const API_PORT = '8000';
 const IS_RAILWAY = API_HOST.includes('.railway.app') || API_HOST.includes('.up.railway.app');
 const IS_NGROK = API_HOST.includes('ngrok-free.app') || API_HOST.includes('ngrok.io');
 
-const PLATFORM_API_BASE_URL = IS_RAILWAY
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+
+const PLATFORM_API_BASE_URL = VITE_API_URL
+  ? `${VITE_API_URL}/platform`
+  : IS_RAILWAY
   ? `${window.location.protocol}//${API_HOST}/api/platform`
   : IS_NGROK
   ? 'https://3fe9-2806-250-430-cab1-00-1cf6.ngrok-free.app/api/platform'
   : `http://${API_HOST}:${API_PORT}/api/platform`;
 
-const ACCOUNTS_API_BASE_URL = IS_RAILWAY
+const ACCOUNTS_API_BASE_URL = VITE_API_URL
+  ? `${VITE_API_URL}/accounts`
+  : IS_RAILWAY
   ? `${window.location.protocol}//${API_HOST}/api/accounts`
   : IS_NGROK
   ? 'https://3fe9-2806-250-430-cab1-00-1cf6.ngrok-free.app/api/accounts'
