@@ -153,10 +153,16 @@ class LoginAPIView(APIView):
         temp_token['temp'] = True
         temp_token['user_id'] = user.id
 
-        try:
-            send_verification_code_email(profile)
-        except Exception as e:
-            print(f'Failed to send verification code email (non-blocking): {e}')
+        # Don't block login if email fails - send in background
+        import threading
+        def send_email_async():
+            try:
+                send_verification_code_email(profile)
+            except Exception as e:
+                print(f'Failed to send verification code email (async): {e}')
+
+        email_thread = threading.Thread(target=send_email_async)
+        email_thread.start()
 
         return Response({
             'requires_verification': True,
