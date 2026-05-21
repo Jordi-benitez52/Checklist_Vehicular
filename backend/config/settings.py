@@ -14,8 +14,9 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '192.168.0.248',
-    '*.railway.app',
-    '*.up.railway.app',
+    '.railway.app',
+    '.up.railway.app',
+    'checklistvehicular-production.up.railway.app',
     'localhost:5173',
     'localhost:8000',
 ]
