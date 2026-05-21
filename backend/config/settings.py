@@ -108,10 +108,10 @@ SECURE_HSTS_PRELOAD = True
 # Cookie Security
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = not DEBUG  # True in production with HTTPS
-SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'None'  # Allow cross-origin cookies
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'None'  # Allow cross-origin cookies
 
 # HSTS for HTTPS (disable for now since we're in HTTP)
 # SECURE_HSTS_SECONDS = 31536000  # Already set above
@@ -205,6 +205,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:5173',
     'https://127.0.0.1:5173',
     'https://checklistvehicular-production.up.railway.app',
+    'https://*.vercel.app',
+    'https://checklist-vehicular-git-main-jordi-rodriguez-s-projects.vercel.app',
 ]
 
 # Restrict CORS to prevent cross-domain issues
