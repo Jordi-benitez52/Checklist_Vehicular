@@ -153,7 +153,10 @@ class LoginAPIView(APIView):
         temp_token['temp'] = True
         temp_token['user_id'] = user.id
 
-        send_verification_code_email(profile)
+        try:
+            send_verification_code_email(profile)
+        except Exception as e:
+            print(f'Failed to send verification code email (non-blocking): {e}')
 
         return Response({
             'requires_verification': True,
@@ -230,7 +233,11 @@ class VerifyCodeAPIView(APIView):
 
             refresh = RefreshToken.for_user(user)
 
-            send_login_notification(profile, request)
+            # Don't block login if email fails - continue silently
+            try:
+                send_login_notification(profile, request)
+            except Exception as e:
+                print(f'Login notification email failed (non-blocking): {e}')
 
             try:
                 AuditLog.objects.create(
