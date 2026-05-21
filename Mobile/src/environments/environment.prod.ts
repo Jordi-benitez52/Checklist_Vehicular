@@ -12,5 +12,5 @@ export const environment = {
   // El técnico de IT debe configurar esto antes de instalar la app
   // en los dispositivos de los guardias.
   // ================================================================
-  apiUrl: 'https://tu-app.railway.app/api/platform'
+  apiUrl: 'https://checklistvehicular-production.up.railway.app/api/platform'
 };

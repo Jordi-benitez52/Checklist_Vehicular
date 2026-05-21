@@ -14,5 +14,5 @@ export const environment = {
   //   - Windows: ipconfig (busca "Dirección IPv4")
   //   - Linux/Mac: hostname -I
   // ================================================================
-  apiUrl: 'https://tu-app.railway.app/api/platform'
+  apiUrl: 'https://checklistvehicular-production.up.railway.app/api/platform'
 };
