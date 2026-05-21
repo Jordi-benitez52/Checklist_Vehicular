@@ -1301,14 +1301,19 @@ class CreateTestUserView(APIView):
         full_name = request.data.get('full_name', 'Guardia Uno')
         rol = request.data.get('rol', 'guardia')
 
-        if User.objects.filter(username=username).exists():
+        user, created = User.objects.get_or_create(
+            username=username,
+            defaults={
+                'email': email,
+                'is_active': True,
+            }
+        )
+
+        if not created:
             return Response({'message': 'El usuario ya existe', 'username': username}, status=status.HTTP_200_OK)
 
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password
-        )
+        user.set_password(password)
+        user.save()
 
         profile = UserProfile.objects.create(
             user=user,
