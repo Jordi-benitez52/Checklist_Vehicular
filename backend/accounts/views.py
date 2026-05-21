@@ -149,26 +149,33 @@ class LoginAPIView(APIView):
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
-        temp_token = RefreshToken.for_user(user)
-        temp_token['temp'] = True
-        temp_token['user_id'] = user.id
+        # TEMPORARY: Skip 2FA for testing - return tokens directly
+        refresh = RefreshToken.for_user(user)
 
-        # Don't block login if email fails - send in background
-        import threading
-        def send_email_async():
-            try:
-                send_verification_code_email(profile)
-            except Exception as e:
-                print(f'Failed to send verification code email (async): {e}')
-
-        email_thread = threading.Thread(target=send_email_async)
-        email_thread.start()
+        # Try to send login notification in background (non-blocking)
+        try:
+            import threading
+            def send_notification():
+                try:
+                    send_login_notification(profile, request)
+                except Exception as e:
+                    print(f'Login notification error: {e}')
+            threading.Thread(target=send_notification, daemon=True).start()
+        except Exception:
+            pass
 
         return Response({
-            'requires_verification': True,
-            'temp_token': str(temp_token),
-            'message': 'Se ha enviado un código de verificación a tu email.',
-            'expires_in': 300
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': profile.role,
+                'full_name': profile.full_name,
+                'phone': profile.phone,
+                'photo': profile.photo.url if profile.photo else None,
+            }
         }, status=status.HTTP_200_OK)
 
 
