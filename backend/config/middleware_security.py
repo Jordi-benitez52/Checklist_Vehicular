@@ -14,7 +14,7 @@ class SecurityHeadersMiddleware:
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
             "img-src 'self' data: https:; "
             "font-src 'self' https://cdn.jsdelivr.net; "
-            "connect-src 'self' https://cdn.jsdelivr.net; "
+            "connect-src 'self' https://*.railway.app https://*.vercel.app https://cdn.jsdelivr.net; "
             "frame-ancestors 'none';"
         )
         response['Content-Security-Policy'] = csp_policy
