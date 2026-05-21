@@ -1296,9 +1296,9 @@ class CreateTestUserView(APIView):
         from .models import UserProfile
 
         username = request.data.get('username', 'guardia1')
-        email = request.data.get('email', 'guardia1@test.com')
         password = request.data.get('password', 'Test123!')
-        full_name = request.data.get('full_name', 'Guardia Uno')
+        email = request.data.get('email', f'{username}@test.com')
+        full_name = request.data.get('full_name', username)
         rol = request.data.get('rol', 'guardia')
 
         try:
@@ -1306,44 +1306,12 @@ class CreateTestUserView(APIView):
             profile = UserProfile.objects.get(user=user)
             return Response({'message': 'El usuario ya existe', 'username': username}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                is_active=True
-            )
-            profile = UserProfile.objects.create(
-                user=user,
-                full_name=full_name,
-                role=rol,
-                is_active=True
-            )
-            return Response({
-                'message': 'Usuario creado exitosamente',
-                'user': {
-                    'id': user.id,
-                    'username': username,
-                    'email': email,
-                    'full_name': full_name,
-                    'rol': rol
-                }
-            }, status=status.HTTP_201_CREATED)
+            user = User.objects.create_user(username=username, email=email, password=password, is_active=True)
         except UserProfile.DoesNotExist:
             user.set_password(password)
             user.save()
-            profile = UserProfile.objects.create(
-                user=user,
-                full_name=full_name,
-                role=rol,
-                is_active=True
-            )
-            return Response({
-                'message': 'Usuario actualizado (perfil creado)',
-                'user': {
-                    'id': user.id,
-                    'username': username,
-                    'email': email,
-                    'full_name': full_name,
-                    'rol': rol
-                }
-            }, status=status.HTTP_200_OK)
+            profile = UserProfile.objects.create(user=user, full_name=full_name, role=rol, is_active=True)
+            return Response({'message': 'Usuario creado', 'username': username}, status=status.HTTP_201_CREATED)
+
+        profile = UserProfile.objects.create(user=user, full_name=full_name, role=rol, is_active=True)
+        return Response({'message': 'Usuario creado', 'username': username}, status=status.HTTP_201_CREATED)
