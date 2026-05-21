@@ -1301,20 +1301,34 @@ class CreateTestUserView(APIView):
         full_name = request.data.get('full_name', 'Guardia Uno')
         rol = request.data.get('rol', 'guardia')
 
-        user, created = User.objects.get_or_create(
-            username=username,
-            defaults={
-                'email': email,
-                'is_active': True,
-            }
-        )
-
-        if not created:
-            try:
-                if user.profile:
-                    return Response({'message': 'El usuario ya existe', 'username': username}, status=status.HTTP_200_OK)
-            except UserProfile.DoesNotExist:
-                pass
+        try:
+            user = User.objects.get(username=username)
+            profile = UserProfile.objects.get(user=user)
+            return Response({'message': 'El usuario ya existe', 'username': username}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                is_active=True
+            )
+            profile = UserProfile.objects.create(
+                user=user,
+                full_name=full_name,
+                role=rol,
+                is_active=True
+            )
+            return Response({
+                'message': 'Usuario creado exitosamente',
+                'user': {
+                    'id': user.id,
+                    'username': username,
+                    'email': email,
+                    'full_name': full_name,
+                    'rol': rol
+                }
+            }, status=status.HTTP_201_CREATED)
+        except UserProfile.DoesNotExist:
             user.set_password(password)
             user.save()
             profile = UserProfile.objects.create(
@@ -1324,7 +1338,7 @@ class CreateTestUserView(APIView):
                 is_active=True
             )
             return Response({
-                'message': 'Usuario actualizado exitosamente (perfil creado)',
+                'message': 'Usuario actualizado (perfil creado)',
                 'user': {
                     'id': user.id,
                     'username': username,
@@ -1333,24 +1347,3 @@ class CreateTestUserView(APIView):
                     'rol': rol
                 }
             }, status=status.HTTP_200_OK)
-
-        user.set_password(password)
-        user.save()
-
-        profile = UserProfile.objects.create(
-            user=user,
-            full_name=full_name,
-            role=rol,
-            is_active=True
-        )
-
-        return Response({
-            'message': 'Usuario creado exitosamente',
-            'user': {
-                'id': user.id,
-                'username': username,
-                'email': email,
-                'full_name': full_name,
-                'rol': rol
-            }
-        }, status=status.HTTP_201_CREATED)
