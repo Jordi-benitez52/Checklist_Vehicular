@@ -1,28 +1,20 @@
 import axios from 'axios';
 
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+const VITE_ACCOUNTS_API_URL = import.meta.env.VITE_ACCOUNTS_API_URL;
+
 const API_HOST = window.location.hostname;
 const API_PORT = '8000';
 
-const IS_RAILWAY = API_HOST.includes('.railway.app') || API_HOST.includes('.up.railway.app');
-const IS_NGROK = API_HOST.includes('ngrok-free.app') || API_HOST.includes('ngrok.io');
+const getBaseURL = (path) => {
+  if (path === 'accounts') {
+    return VITE_ACCOUNTS_API_URL || VITE_API_URL || `http://${API_HOST}:${API_PORT}`;
+  }
+  return VITE_API_URL || `http://${API_HOST}:${API_PORT}`;
+};
 
-const VITE_API_URL = import.meta.env.VITE_API_URL;
-
-const PLATFORM_API_BASE_URL = VITE_API_URL
-  ? `${VITE_API_URL}/api/platform`
-  : IS_RAILWAY
-  ? `${window.location.protocol}//${API_HOST}/api/platform`
-  : IS_NGROK
-  ? 'https://3fe9-2806-250-430-cab1-00-1cf6.ngrok-free.app/api/platform'
-  : `http://${API_HOST}:${API_PORT}/api/platform`;
-
-const ACCOUNTS_API_BASE_URL = VITE_API_URL
-  ? `${VITE_API_URL}/api/accounts`
-  : IS_RAILWAY
-  ? `${window.location.protocol}//${API_HOST}/api/accounts`
-  : IS_NGROK
-  ? 'https://3fe9-2806-250-430-cab1-00-1cf6.ngrok-free.app/api/accounts'
-  : `http://${API_HOST}:${API_PORT}/api/accounts`;
+const PLATFORM_API_BASE_URL = `${getBaseURL('platform')}/api/platform`;
+const ACCOUNTS_API_BASE_URL = `${getBaseURL('accounts')}/api/accounts`;
 
 const createApiInstance = (baseURL) => {
   const instance = axios.create({

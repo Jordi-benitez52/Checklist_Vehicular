@@ -29,9 +29,18 @@ from .serializers import (
 from config.email_service import send_login_notification
 
 
+import secrets
+
+
 def generate_verification_code():
-    """Generate a 6-digit verification code"""
-    return ''.join(random.choices(string.digits, k=6))
+    """Generate a secure 8-character alphanumeric verification code"""
+    alphabet = string.ascii_uppercase + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(8))
+
+
+def generate_password_reset_code():
+    """Generate a secure 32-character URL-safe token for password reset"""
+    return secrets.token_urlsafe(32)
 
 
 def send_verification_code_email(profile):
@@ -100,12 +109,24 @@ class LoginAPIView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        from django.core.cache import cache
+
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         username = serializer.validated_data['username']
         password = serializer.validated_data['password']
+        ip = request.META.get('REMOTE_ADDR', '')
+        rate_limit_key = f'login_attempts_{ip}:{username}'
+        attempts = cache.get(rate_limit_key, 0)
+
+        if attempts >= 5:
+            cache.set(f'login_locked_{ip}', True, 900)
+            return Response(
+                {'error': 'Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.'},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
 
         try:
             user = User.objects.get(username=username)
@@ -117,6 +138,7 @@ class LoginAPIView(APIView):
 
         user = authenticate(username=username, password=password)
         if not user:
+            cache.set(rate_limit_key, attempts + 1, 900)
             return Response(
                 {'error': 'La contraseña es incorrecta.'},
                 status=status.HTTP_401_UNAUTHORIZED
@@ -149,13 +171,12 @@ class LoginAPIView(APIView):
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
-        # Generate temp token for 2FA verification
-        from rest_framework_simplejwt.tokens import RefreshToken
+        cache.delete(rate_limit_key)
+
         temp_token = RefreshToken.for_user(user)
         temp_token['temp'] = True
         temp_token['user_id'] = user.id
 
-        # Send verification code via email
         send_verification_code_email(profile)
 
         return Response({
@@ -170,13 +191,25 @@ class VerifyCodeAPIView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        from django.core.cache import cache
+
         temp_token = request.data.get('temp_token')
-        code = request.data.get('code')
+        code = request.data.get('code', '').strip().upper()
 
         if not temp_token or not code:
             return Response(
                 {'error': 'Token y código son requeridos.'},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+        token_hash = str(hash(temp_token))
+        rate_limit_key = f'verify_attempts_{token_hash}'
+        attempts = cache.get(rate_limit_key, 0)
+
+        if attempts >= 5:
+            return Response(
+                {'error': 'Demasiados intentos fallidos. Solicita un nuevo código.'},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
         try:
@@ -205,6 +238,7 @@ class VerifyCodeAPIView(APIView):
                 )
 
             if profile.verification_code != code:
+                cache.set(rate_limit_key, attempts + 1, 300)
                 profile.verification_attempts += 1
                 profile.save()
 
@@ -214,6 +248,7 @@ class VerifyCodeAPIView(APIView):
                     profile.verification_code = None
                     profile.verification_code_expires = None
                     profile.save()
+                    cache.delete(rate_limit_key)
                     return Response(
                         {'error': 'Demasiados intentos fallidos. Bloqueado por 15 minutos.'},
                         status=status.HTTP_429_TOO_MANY_REQUESTS
@@ -225,6 +260,7 @@ class VerifyCodeAPIView(APIView):
                     status=status.HTTP_401_UNAUTHORIZED
                 )
 
+            cache.delete(rate_limit_key)
             profile.verification_code = None
             profile.verification_code_expires = None
             profile.verification_attempts = 0
@@ -967,7 +1003,6 @@ class PasswordResetRequestView(APIView):
         from django.conf import settings
         from django.utils import timezone
         from datetime import timedelta
-        import random
 
         email = request.data.get('email')
 
@@ -982,31 +1017,34 @@ class PasswordResetRequestView(APIView):
             profile = user.profile
         except User.DoesNotExist:
             return Response(
-                {'message': 'Si el correo esta registrado, recibiras un codigo de recuperacion.'},
+                {'message': 'Si el correo esta registrado, recibiras un enlace de recuperacion.'},
                 status=status.HTTP_200_OK
             )
 
         if not profile.is_active_user or not user.is_active:
             return Response(
-                {'message': 'Si el correo esta registrado, recibiras un codigo de recuperacion.'},
+                {'message': 'Si el correo esta registrado, recibiras un enlace de recuperacion.'},
                 status=status.HTTP_200_OK
             )
 
-        if profile.is_locked():
+        if profile.is_password_reset_locked():
+            locked_until = profile.password_reset_locked_until.strftime('%H:%M')
             return Response(
-                {'error': 'Demasiados intentos. Intenta de nuevo en 15 minutos.'},
+                {'error': f'Cuenta bloqueada. Intenta de nuevo despues de las {locked_until}.'},
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
-        code = ''.join(random.choices('0123456789', k=6))
-        expires = timezone.now() + timedelta(minutes=5)
+        code = generate_password_reset_code()
+        expires = timezone.now() + timedelta(minutes=15)
 
-        profile.verification_code = code
-        profile.verification_code_expires = expires
-        profile.verification_attempts = 0
+        profile.password_reset_code = code
+        profile.password_reset_code_expires = expires
+        profile.password_reset_attempts = 0
         profile.save()
 
-        subject = '[LRA Checklist] Codigo para restablecer contrasena'
+        reset_url = f"{settings.FRONTEND_URL}/reset-password?code={code}"
+
+        subject = '[LRA Checklist] Enlace para restablecer contrasena'
         html_content = f'''
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: linear-gradient(135deg, #059669, #047857); padding: 20px; text-align: center; color: white;">
@@ -1015,11 +1053,12 @@ class PasswordResetRequestView(APIView):
             <div style="padding: 20px; background: #f8fafc;">
                 <h3 style="color: #059669;">Hola {profile.full_name or user.username},</h3>
                 <p>Se ha solicitado un restablecimiento de contrasena para tu cuenta.</p>
+                <p>Haz clic en el siguiente enlace para restablecer tu contrasena:</p>
                 <div style="text-align: center; margin: 30px 0;">
-                    <p style="font-size: 18px;">Tu codigo de verificacion es:</p>
-                    <p style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #059669;">{code}</p>
-                    <p style="font-size: 14px; color: #6b7280;">Este codigo expira en 5 minutos</p>
+                    <a href="{reset_url}" style="background: #059669; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Restablecer Contrasena</a>
                 </div>
+                <p style="font-size: 14px; color: #6b7280;">Este enlace expira en 15 minutos.</p>
+                <p style="color: #dc2626; font-size: 14px; margin-top: 15px;">Si no solicitaste este cambio, ignora este email.</p>
             </div>
             <div style="padding: 15px; background: #047857; color: white; text-align: center; font-size: 12px;">
                 Sistema de Checklist Vehicular - LRA
@@ -1038,10 +1077,10 @@ class PasswordResetRequestView(APIView):
         except Exception as e:
             import logging
             logger = logging.getLogger('django')
-            logger.error(f'Error enviando codigo de password reset a {email}: {e}')
+            logger.error(f'Error enviando enlace de password reset a {email}: {e}')
 
         return Response(
-            {'message': 'Si el correo esta registrado, recibiras un codigo de recuperacion.'},
+            {'message': 'Si el correo esta registrado, recibiras un enlace de recuperacion.'},
             status=status.HTTP_200_OK
         )
 
@@ -1051,6 +1090,7 @@ class PasswordResetConfirmView(APIView):
 
     def post(self, request):
         from django.contrib.auth.hashers import make_password
+        from django.core.cache import cache
         from datetime import timedelta
 
         code = request.data.get('code', '').strip()
@@ -1086,20 +1126,30 @@ class PasswordResetConfirmView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        rate_limit_key = f'password_reset_attempts_{code}'
+        attempts = cache.get(rate_limit_key, 0)
+        if attempts >= 5:
+            return Response(
+                {'error': 'Demasiados intentos fallidos. Solicita un nuevo enlace de recuperacion.'},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+
         try:
             profile = UserProfile.objects.select_related('user').get(
-                verification_code=code,
-                verification_code_expires__gt=timezone.now()
+                password_reset_code=code,
+                password_reset_code_expires__gt=timezone.now()
             )
         except UserProfile.DoesNotExist:
+            cache.set(rate_limit_key, attempts + 1, 300)
             return Response(
                 {'error': 'Codigo invalido o expirado.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if profile.verification_locked_until and profile.verification_locked_until > timezone.now():
+        if profile.is_password_reset_locked():
+            locked_until = profile.password_reset_locked_until.strftime('%H:%M')
             return Response(
-                {'error': 'Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.'},
+                {'error': f'Demasiados intentos fallidos. Intenta de nuevo despues de las {locked_until}.'},
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
@@ -1107,16 +1157,63 @@ class PasswordResetConfirmView(APIView):
         user.password = make_password(new_password)
         user.save()
 
-        profile.verification_code = None
-        profile.verification_code_expires = None
-        profile.verification_attempts = 0
-        profile.verification_locked_until = None
+        profile.password_reset_code = None
+        profile.password_reset_code_expires = None
+        profile.password_reset_attempts = 0
+        profile.password_reset_locked_until = None
         profile.save()
+
+        cache.delete(rate_limit_key)
+
+        self._send_password_change_notification(user, request)
 
         return Response(
             {'message': 'Contrasena actualizada correctamente. Ya puedes iniciar sesion.'},
             status=status.HTTP_200_OK
         )
+
+    def _send_password_change_notification(self, user, request):
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+
+        profile = user.profile
+        ip = request.META.get('REMOTE_ADDR', 'Desconocida')
+
+        subject = '[LRA Checklist] Contrasena cambiada exitosamente'
+        html_content = f'''
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #059669, #047857); padding: 20px; text-align: center; color: white;">
+                <h2 style="margin: 0;">LRA Checklist Vehicular</h2>
+            </div>
+            <div style="padding: 20px; background: #f8fafc;">
+                <h3 style="color: #059669;">Hola {profile.full_name or user.username},</h3>
+                <p>Tu contrasena ha sido cambiada exitosamente.</p>
+                <div style="background: #dcfce7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 0; font-size: 14px; color: #6b7280;">
+                        <strong>Fecha:</strong> {timezone.now().strftime('%d/%m/%Y %H:%M')}<br>
+                        <strong>IP:</strong> {ip}
+                    </p>
+                </div>
+                <p style="color: #dc2626; font-size: 14px;">Si no fuiste tu, contacta al administrador inmediatamente.</p>
+            </div>
+            <div style="padding: 15px; background: #047857; color: white; text-align: center; font-size: 12px;">
+                Sistema de Checklist Vehicular - LRA
+            </div>
+        </div>
+        '''
+
+        email_msg = EmailMultiAlternatives(
+            subject=subject,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email]
+        )
+        email_msg.attach_alternative(html_content, 'text/html')
+        try:
+            email_msg.send()
+        except Exception as e:
+            import logging
+            logger = logging.getLogger('django')
+            logger.error(f'Error enviando notificacion de cambio de password a {user.email}: {e}')
 
 
 class GoogleOAuthCallbackView(APIView):

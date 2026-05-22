@@ -4,13 +4,14 @@ export const environment = {
   // CONFIGURACIÓN DE PRODUCCIÓN
   // ================================================================
   // IMPORTANTE: Antes de compilar para producción, actualiza la URL
-  // con la URL de Railway que se给你 al desplegar.
+  // con la URL del servidor donde esté desplegado el backend.
   //
-  // Ejemplo:
-  //   - 'https://tu-app.railway.app/api/platform'
+  // Ejemplos:
+  //   - 'http://tu-dominio.com/api/platform'
+  //   - 'http://192.168.1.100:8000/api/platform' (red local)
   //
   // El técnico de IT debe configurar esto antes de instalar la app
   // en los dispositivos de los guardias.
   // ================================================================
-  apiUrl: 'https://checklistvehicular-production.up.railway.app/api/platform'
+  apiUrl: 'http://localhost:8000/api/platform'
 };
