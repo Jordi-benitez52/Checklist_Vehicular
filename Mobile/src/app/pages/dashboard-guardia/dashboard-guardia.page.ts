@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertController, LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
+import { WebSocketService, DashboardData } from 'src/app/services/websocket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard-guardia',
@@ -10,21 +12,27 @@ import { AuthService } from 'src/app/services/auth.service';
   templateUrl: './dashboard-guardia.page.html',
   styleUrls: ['./dashboard-guardia.page.scss'],
 })
-export class DashboardGuardiaPage implements OnInit {
+export class DashboardGuardiaPage implements OnInit, OnDestroy {
   user: any = null;
   turnoActivo: any = null;
   fechaActual = new Date();
   isDarkMode: boolean = false;
+  wsConnected: boolean = false;
 
   stats = {
     entradas: 0,
     salidas: 0,
-    checklists: 0
+    checklists: 0,
+    vehiculosActivos: 0
   };
+
+  private wsSubscription: Subscription | null = null;
+  private connectionSubscription: Subscription | null = null;
 
   constructor(
     private authService: AuthService,
     private apiService: ApiService,
+    private wsService: WebSocketService,
     private router: Router,
     private alertController: AlertController,
     private loadingController: LoadingController
@@ -50,11 +58,36 @@ export class DashboardGuardiaPage implements OnInit {
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
+    this.initWebSocket();
     this.cargarDatos();
+  }
+
+  ngOnDestroy(): void {
+    this.wsSubscription?.unsubscribe();
+    this.connectionSubscription?.unsubscribe();
   }
 
   ionViewWillEnter(): void {
     this.cargarDatos();
+    this.wsService.requestUpdate();
+  }
+
+  private initWebSocket(): void {
+    this.wsService.connect();
+
+    this.connectionSubscription = this.wsService.connectionStatus$.subscribe(
+      (connected) => {
+        this.wsConnected = connected;
+      }
+    );
+
+    this.wsSubscription = this.wsService.dashboardData$.subscribe(
+      (data: DashboardData | null) => {
+        if (data) {
+          this.stats.vehiculosActivos = data.total_vehiculos;
+        }
+      }
+    );
   }
 
   async cargarDatos(): Promise<void> {
@@ -93,7 +126,7 @@ export class DashboardGuardiaPage implements OnInit {
   cargarStats(): Promise<void> {
     return new Promise((resolve) => {
       if (!this.turnoActivo?.id) {
-        this.stats = { entradas: 0, salidas: 0, checklists: 0 };
+        this.stats = { entradas: 0, salidas: 0, checklists: 0, vehiculosActivos: this.stats.vehiculosActivos };
         resolve();
         return;
       }
@@ -106,7 +139,7 @@ export class DashboardGuardiaPage implements OnInit {
           resolve();
         },
         error: () => {
-          this.stats = { entradas: 0, salidas: 0, checklists: 0 };
+          this.stats = { entradas: 0, salidas: 0, checklists: 0, vehiculosActivos: this.stats.vehiculosActivos };
           resolve();
         }
       });
@@ -151,6 +184,7 @@ export class DashboardGuardiaPage implements OnInit {
   }
 
   logout(): void {
+    this.wsService.disconnect();
     this.authService.logout();
   }
 }

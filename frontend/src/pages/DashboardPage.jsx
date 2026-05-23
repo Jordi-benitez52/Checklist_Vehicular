@@ -20,12 +20,14 @@ import {
   checklistsService,
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useWebSocket } from '../context/WebSocketContext';
 import './DashboardPage.css';
 
 const COLORS = ['#2563eb', '#059669', '#f59e0b', '#dc2626'];
 
 const DashboardPage = () => {
   const { user } = useAuth();
+  const { connected, dashboardData, requestUpdate } = useWebSocket();
   const [stats, setStats] = useState({
     totalRegistros: 0,
     turnosAbiertos: 0,
@@ -42,10 +44,26 @@ const DashboardPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    if (dashboardData) {
+      setStats({
+        totalRegistros: dashboardData.total_registros || 0,
+        turnosAbiertos: dashboardData.total_turnos_abiertos || 0,
+        totalVehiculos: dashboardData.total_vehiculos || 0,
+        totalChecklists: dashboardData.total_checklists_tracto || 0,
+      });
+      setTurnosStats({
+        abiertos: dashboardData.total_turnos_abiertos || 0,
+        cerrados_hoy: 0,
+        total: dashboardData.total_turnos_abiertos || 0,
+      });
+      setLoading(false);
+      setError(null);
+    }
+  }, [dashboardData]);
 
   const loadDashboardData = async () => {
+    if (dashboardData) return;
+    
     try {
       setLoading(true);
       setError(null);
@@ -92,7 +110,7 @@ const DashboardPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !dashboardData) {
     return (
       <div className="dashboard-loading">
         <div className="spinner-large"></div>
@@ -101,7 +119,7 @@ const DashboardPage = () => {
     );
   }
 
-  if (error) {
+  if (error && !dashboardData) {
     return (
       <div className="dashboard-error">
         <i className="bi bi-exclamation-triangle"></i>
@@ -115,9 +133,15 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard">
-      <div className="welcome-banner">
-        <h2>Bienvenido, {user?.username}</h2>
-        <p>Resumen de usuarios en la plataforma</p>
+      <div className="dashboard-header">
+        <div className="welcome-banner">
+          <h2>Bienvenido, {user?.username}</h2>
+          <p>Resumen de usuarios en la plataforma</p>
+        </div>
+        <div className={`connection-status ${connected ? 'connected' : 'disconnected'}`}>
+          <i className={`bi ${connected ? 'bi-wifi' : 'bi-wifi-off'}`}></i>
+          <span>{connected ? 'Tiempo Real' : 'Sin conexión'}</span>
+        </div>
       </div>
 
       <div className="stats-grid">

@@ -32,6 +32,12 @@
                 <ion-badge color="success">
                   Guardia
                 </ion-badge>
+                @if (wsConnected) {
+                  <ion-badge color="primary" class="ion-margin-start">
+                    <ion-icon name="wifi" class="ion-margin-end"></ion-icon>
+                    Tiempo Real
+                  </ion-badge>
+                }
               </p>
               <p class="user-date">
                 <ion-icon name="calendar-outline"></ion-icon>
@@ -101,20 +107,25 @@
       <ion-card-content>
         <ion-grid>
           <ion-row class="ion-text-center">
-            <ion-col size="4" class="stat-col">
+            <ion-col size="3" class="stat-col">
               <ion-icon name="arrow-down-circle" class="stat-icon entrada"></ion-icon>
               <div class="stat-number">{{ stats.entradas }}</div>
               <div class="stat-label">Entradas</div>
             </ion-col>
-            <ion-col size="4" class="stat-col">
+            <ion-col size="3" class="stat-col">
               <ion-icon name="arrow-up-circle" class="stat-icon salida"></ion-icon>
               <div class="stat-number">{{ stats.salidas }}</div>
               <div class="stat-label">Salidas</div>
             </ion-col>
-            <ion-col size="4" class="stat-col">
+            <ion-col size="3" class="stat-col">
               <ion-icon name="clipboard-check" class="stat-icon checklist"></ion-icon>
               <div class="stat-number">{{ stats.checklists }}</div>
               <div class="stat-label">Checklists</div>
+            </ion-col>
+            <ion-col size="3" class="stat-col">
+              <ion-icon name="car" class="stat-icon vehiculos"></ion-icon>
+              <div class="stat-number">{{ stats.vehiculosActivos }}</div>
+              <div class="stat-label">Vehículos</div>
             </ion-col>
           </ion-row>
         </ion-grid>

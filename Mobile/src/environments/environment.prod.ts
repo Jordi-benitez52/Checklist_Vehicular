@@ -6,12 +6,14 @@ export const environment = {
   // IMPORTANTE: Antes de compilar para producción, actualiza la URL
   // con la URL del servidor donde esté desplegado el backend.
   //
-  // Ejemplos:
-  //   - 'http://tu-dominio.com/api/platform'
-  //   - 'http://192.168.1.100:8000/api/platform' (red local)
+  // ¿Cómo saber la IP del servidor?
+  //   - Windows: ipconfig (busca "Dirección IPv4")
+  //   - Linux/Mac: hostname -I
   //
-  // El técnico de IT debe configurar esto antes de instalar la app
-  // en los dispositivos de los guardias.
+  // Ejemplos:
+  //   - apiUrl: 'http://192.168.1.100:8000/api/platform'
+  //   - wsUrl: 'ws://192.168.1.100:8000/ws/dashboard/'
   // ================================================================
-  apiUrl: 'http://localhost:8000/api/platform'
+  apiUrl: 'http://localhost:8000/api/platform',
+  wsUrl: 'ws://localhost:8000/ws/dashboard/'
 };
